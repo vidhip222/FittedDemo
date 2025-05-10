@@ -29,7 +29,7 @@ export default function LoginPage() {
         Back
       </Link>
       <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r">
-        <div className="absolute inset-0 bg-zinc-900" />
+        <div className="absolute inset-0 bg-gradient-to-br from-pink-300 to-orange-300" />
         <div className="relative z-20 flex items-center gap-2 text-lg font-medium">
           <Sparkles className="h-5 w-5" />
           <span>Fitted</span>
@@ -68,14 +68,10 @@ export default function LoginPage() {
               {loading ? "Signing in..." : "Sign in"}
             </Button>
           </form>
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
-            </div>
-          </div>
+
+          {/* Removed the divider with line and replaced with simple text */}
+          <div className="text-center text-xs uppercase text-muted-foreground py-2">Or continue with</div>
+
           <div className="flex flex-col space-y-2">
             <Button variant="outline" onClick={() => handleLogin}>
               Google
