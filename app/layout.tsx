@@ -9,7 +9,7 @@ const merriweather = Merriweather({ weight: ["400", "700"], subsets: ["latin"] }
 export const metadata = {
   title: "Fitted - AI-Powered Styling Platform",
   description: "Your vibe. Your fit. Your world—styled in real life.",
-    generator: 'v0.dev'
+  generator: "v0.dev",
 }
 
 export default function RootLayout({
