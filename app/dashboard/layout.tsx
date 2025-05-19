@@ -88,13 +88,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     Nearby Stores
                   </Link>
                   <Link
-                    href="/dashboard/fashion-search"
-                    className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-accent"
-                  >
-                    <Search className="h-5 w-5" />
-                    Fashion Search
-                  </Link>
-                  <Link
                     href="/dashboard/stores"
                     className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-accent"
                   >
@@ -166,13 +159,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               <Link href="/dashboard/stores" className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-accent">
                 <MapPin className="h-5 w-5" />
                 Nearby Stores
-              </Link>
-              <Link
-                href="/dashboard/fashion-search"
-                className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-accent"
-              >
-                <Search className="h-5 w-5" />
-                Fashion Search
               </Link>
               <Link href="/dashboard/stores" className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-accent">
                 <Store className="h-5 w-5" />

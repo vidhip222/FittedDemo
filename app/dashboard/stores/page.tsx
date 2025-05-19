@@ -1,13 +1,11 @@
-import { CardFooter } from "@/components/ui/card"
 import Link from "next/link"
 import Image from "next/image"
 import { MapPin, Star, Search, Filter, Truck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { StoreLocator } from "@/components/store-locator"
 
 export default function StoresPage() {
   // Mock data for stores
@@ -75,22 +73,7 @@ export default function StoresPage() {
   ]
 
   return (
-    <div className="container py-6 space-y-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold">Store Locator</h1>
-        <p className="text-muted-foreground">Find clothing stores near you and discover local fashion.</p>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Find Nearby Stores</CardTitle>
-          <CardDescription>Search for clothing stores in your area or any location.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <StoreLocator />
-        </CardContent>
-      </Card>
-
+    <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Nearby Stores</h2>

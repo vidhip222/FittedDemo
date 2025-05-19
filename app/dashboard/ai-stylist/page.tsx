@@ -1,9 +1,18 @@
 "use client"
 
 import type React from "react"
+
 import { useState, useRef, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { AIStylistChat } from "@/components/ai-stylist-chat"
+import { Mic, MicOff, Send, ImageIcon, MapPin } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import Image from "next/image"
+import Link from "next/link"
 
 export default function AIStylistPage() {
   const [messages, setMessages] = useState<Message[]>([
@@ -19,7 +28,6 @@ export default function AIStylistPage() {
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  const scrollAreaRef = useRef<HTMLDivElement>(null)
 
   // Mock closet data
   const closetItems = [
@@ -37,9 +45,7 @@ export default function AIStylistPage() {
   }, [messages])
 
   const scrollToBottom = () => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
   const handleSendMessage = async (e?: React.FormEvent) => {
@@ -249,88 +255,261 @@ export default function AIStylistPage() {
   }
 
   return (
-    <div className="container py-6 space-y-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold">AI Stylist</h1>
-        <p className="text-muted-foreground">
-          Chat with your personal AI stylist for outfit recommendations and fashion advice.
-        </p>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-[2fr_1fr]">
-        <Card className="md:order-1">
-          <CardHeader>
-            <CardTitle>Chat with Your Stylist</CardTitle>
-            <CardDescription>Ask about outfit ideas, style advice, or shopping recommendations.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <AIStylistChat />
-          </CardContent>
-        </Card>
-
-        <div className="space-y-6 md:order-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Style Preferences</CardTitle>
-              <CardDescription>Your AI stylist uses these preferences to personalize recommendations.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-medium">Favorite Styles</h3>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {["Casual", "Minimalist", "Streetwear"].map((style) => (
-                      <div key={style} className="bg-primary/10 text-primary rounded-full px-3 py-1 text-sm">
-                        {style}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="font-medium">Color Palette</h3>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {["Black", "White", "Blue", "Gray"].map((color) => (
-                      <div key={color} className="bg-primary/10 text-primary rounded-full px-3 py-1 text-sm">
-                        {color}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="font-medium">Budget</h3>
-                  <div className="bg-primary/10 text-primary rounded-full px-3 py-1 text-sm inline-block mt-2">
-                    Medium ($50-$150)
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Conversation Starters</CardTitle>
-              <CardDescription>Try asking your AI stylist these questions.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {[
-                  "What should I wear to a casual dinner?",
-                  "Help me create an outfit for a job interview.",
-                  "What are the trending styles this season?",
-                  "Can you recommend sustainable fashion brands?",
-                  "How can I style a white t-shirt?",
-                ].map((question, index) => (
-                  <div key={index} className="p-2 rounded-md hover:bg-muted cursor-pointer">
-                    {question}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+    <div className="flex flex-col h-[calc(100vh-8rem)]">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">AI Stylist</h2>
+          <p className="text-muted-foreground">Chat with your personal AI fashion assistant</p>
         </div>
       </div>
+
+      <Card className="flex-1 flex flex-col overflow-hidden">
+        <Tabs defaultValue="chat" className="flex-1 flex flex-col">
+          <div className="px-4 pt-4 border-b">
+            <TabsList>
+              <TabsTrigger value="chat">Chat</TabsTrigger>
+              <TabsTrigger value="closet">My Closet</TabsTrigger>
+              <TabsTrigger value="preferences">Preferences</TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="chat" className="flex-1 flex flex-col m-0 data-[state=active]:flex-1">
+            <ScrollArea className="flex-1 p-4">
+              <div className="space-y-4">
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex ${message.role === "user" ? "justify-end" : "justify-start"} gap-2`}
+                  >
+                    {message.role === "assistant" && (
+                      <Avatar>
+                        <AvatarImage src="/placeholder.svg?height=40&width=40&text=AI" alt="AI Stylist" />
+                        <AvatarFallback>AI</AvatarFallback>
+                      </Avatar>
+                    )}
+                    <div
+                      className={`flex flex-col max-w-[80%] ${message.role === "user" ? "items-end" : "items-start"}`}
+                    >
+                      <div
+                        className={`rounded-lg px-4 py-2 ${
+                          message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
+                        }`}
+                      >
+                        <p>{message.content}</p>
+                      </div>
+                      {message.outfitSuggestion && (
+                        <div className="mt-2 rounded-lg overflow-hidden border">
+                          <div className="aspect-[4/3] relative">
+                            <Image
+                              src={message.outfitSuggestion.image || "/placeholder.svg"}
+                              alt={message.outfitSuggestion.name}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                          <div className="p-3">
+                            <h3 className="font-medium">{message.outfitSuggestion.name}</h3>
+                            <div className="mt-2 flex flex-wrap gap-1">
+                              {message.outfitSuggestion.items.map((item) => (
+                                <Badge key={item.id} variant="secondary">
+                                  {item.name}
+                                </Badge>
+                              ))}
+                            </div>
+                            <div className="mt-3 flex justify-between">
+                              <Button variant="outline" size="sm">
+                                Save Outfit
+                              </Button>
+                              <Button size="sm">Try On</Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      {message.storeRecommendations && (
+                        <div className="mt-2 space-y-2">
+                          <h3 className="text-sm font-medium">Recommended Items:</h3>
+                          <div className="flex gap-2 overflow-x-auto pb-2">
+                            {message.storeRecommendations.map((item) => (
+                              <div key={item.id} className="min-w-[200px] rounded-lg overflow-hidden border">
+                                <div className="aspect-square relative">
+                                  <Image
+                                    src={item.image || "/placeholder.svg"}
+                                    alt={item.name}
+                                    fill
+                                    className="object-cover"
+                                  />
+                                  {item.tags && (
+                                    <div className="absolute top-2 right-2">
+                                      {item.tags.includes("thrift") && (
+                                        <Badge className="bg-green-500 text-white mb-1">Thrift</Badge>
+                                      )}
+                                      {item.tags.includes("small business") && (
+                                        <Badge className="bg-blue-500 text-white mb-1">Small Business</Badge>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="p-3">
+                                  <h4 className="font-medium">{item.name}</h4>
+                                  <p className="text-sm font-bold">${item.price.toFixed(2)}</p>
+                                  <div className="flex items-center text-xs text-muted-foreground mt-1">
+                                    <MapPin className="h-3 w-3 mr-1" />
+                                    {item.store} ({item.distance})
+                                  </div>
+                                  <Button size="sm" className="w-full mt-2">
+                                    Get It
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      <span className="text-xs text-muted-foreground mt-1">{formatTime(message.timestamp)}</span>
+                    </div>
+                    {message.role === "user" && (
+                      <Avatar>
+                        <AvatarImage src="/placeholder-user.jpg" alt="User" />
+                        <AvatarFallback>JD</AvatarFallback>
+                      </Avatar>
+                    )}
+                  </div>
+                ))}
+                {isLoading && (
+                  <div className="flex justify-start gap-2">
+                    <Avatar>
+                      <AvatarImage src="/placeholder.svg?height=40&width=40&text=AI" alt="AI Stylist" />
+                      <AvatarFallback>AI</AvatarFallback>
+                    </Avatar>
+                    <div className="rounded-lg bg-muted px-4 py-2 text-foreground">
+                      <div className="flex items-center gap-1">
+                        <div className="h-2 w-2 rounded-full bg-current animate-bounce" />
+                        <div className="h-2 w-2 rounded-full bg-current animate-bounce [animation-delay:0.2s]" />
+                        <div className="h-2 w-2 rounded-full bg-current animate-bounce [animation-delay:0.4s]" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+            </ScrollArea>
+            <div className="p-4 border-t">
+              <form onSubmit={handleSendMessage} className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className={isRecording ? "bg-red-100 text-red-500" : ""}
+                  onClick={toggleRecording}
+                >
+                  {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                </Button>
+                <Button type="button" variant="outline" size="icon">
+                  <ImageIcon className="h-5 w-5" />
+                </Button>
+                <Input
+                  ref={inputRef}
+                  placeholder={isRecording ? "Listening..." : "Ask your AI stylist..."}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  className="flex-1"
+                  disabled={isRecording}
+                />
+                <Button type="submit" size="icon" disabled={(!input.trim() && !isRecording) || isLoading}>
+                  <Send className="h-5 w-5" />
+                </Button>
+              </form>
+              <div className="mt-2 flex flex-wrap gap-1">
+                <SuggestionChip text="What should I wear today?" onClick={(text) => setInput(text)} />
+                <SuggestionChip text="Find me a date night outfit" onClick={(text) => setInput(text)} />
+                <SuggestionChip text="I need work clothes" onClick={(text) => setInput(text)} />
+                <SuggestionChip text="Show me thrift store finds" onClick={(text) => setInput(text)} />
+                <SuggestionChip text="Recommend small business items" onClick={(text) => setInput(text)} />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="closet" className="m-0 p-4 data-[state=active]:flex-1">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+              {closetItems.map((item) => (
+                <Card key={item.id} className="overflow-hidden">
+                  <CardContent className="p-0">
+                    <div className="aspect-square relative">
+                      <Image
+                        src={`/placeholder.svg?height=200&width=200&text=${item.name}`}
+                        alt={item.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="p-2">
+                      <h3 className="font-medium text-sm">{item.name}</h3>
+                      <p className="text-xs text-muted-foreground capitalize">{item.category}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <div className="mt-4 flex justify-center">
+              <Link href="/dashboard/closet">
+                <Button>View Full Closet</Button>
+              </Link>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="preferences" className="m-0 p-4 data-[state=active]:flex-1">
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-medium mb-2">Style Preferences</h3>
+                <div className="flex flex-wrap gap-2">
+                  <StylePreferenceChip text="Casual" selected />
+                  <StylePreferenceChip text="Formal" />
+                  <StylePreferenceChip text="Streetwear" selected />
+                  <StylePreferenceChip text="Vintage" />
+                  <StylePreferenceChip text="Minimalist" selected />
+                  <StylePreferenceChip text="Bohemian" />
+                  <StylePreferenceChip text="Athletic" />
+                  <StylePreferenceChip text="Preppy" />
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-medium mb-2">Shopping Preferences</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span>Price Range</span>
+                    <Badge>$$-$$$</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Prefer Sustainable Brands</span>
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                      Yes
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Include Thrift/Second-hand</span>
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                      Yes
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Prefer Local Businesses</span>
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                      Yes
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 flex justify-center">
+                <Link href="/dashboard/settings">
+                  <Button>Edit Preferences</Button>
+                </Link>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </Card>
     </div>
   )
 }
