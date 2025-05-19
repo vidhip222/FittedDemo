@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { getOpenAI } from "@/lib/openai"
 
 // Mock data for AI stylist responses
 const outfitSuggestions = [
@@ -125,79 +126,47 @@ const storeRecommendations = {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const { message, preferences } = body
+    const openai = getOpenAI()
 
-    // In a real app, this would use AI to generate personalized responses
-    // based on the user's message and preferences
-
-    const lowerCaseMessage = message.toLowerCase()
-    let response = {
-      id: Date.now().toString(),
-      role: "assistant",
-      content: "I can help you find outfit ideas from your closet or recommend new pieces from nearby stores.",
-      timestamp: new Date(),
+    if (!openai) {
+      return NextResponse.json({ error: "OpenAI client not initialized" }, { status: 500 })
     }
 
-    // Generate different responses based on user input
-    if (lowerCaseMessage.includes("wear") && lowerCaseMessage.includes("today")) {
-      response = {
-        ...response,
-        content: "Based on your closet and today's weather, I recommend this outfit:",
-        outfitSuggestion: outfitSuggestions[0],
-      }
-    } else if (
-      lowerCaseMessage.includes("date") ||
-      (lowerCaseMessage.includes("wear") && lowerCaseMessage.includes("dinner"))
-    ) {
-      response = {
-        ...response,
-        content: "For a date night, I recommend this elegant outfit:",
-        outfitSuggestion: outfitSuggestions[1],
-        storeRecommendations: [
-          {
-            id: 1,
-            name: "Heels",
-            price: 89.99,
-            store: "Aldo",
-            distance: "3.0 miles",
-            image: "/placeholder.svg?height=100&width=100&text=Heels",
-          },
-        ],
-      }
-    } else if (
-      lowerCaseMessage.includes("work") ||
-      lowerCaseMessage.includes("office") ||
-      lowerCaseMessage.includes("professional")
-    ) {
-      response = {
-        ...response,
-        content:
-          "I notice you don't have many professional items in your closet. Here are some recommendations from nearby stores that would work well for the office:",
-        storeRecommendations: storeRecommendations.work,
-      }
-    } else if (lowerCaseMessage.includes("thrift") || lowerCaseMessage.includes("sustainable")) {
-      response = {
-        ...response,
-        content: "Here are some sustainable options from thrift stores near you:",
-        storeRecommendations: storeRecommendations.thrift,
-      }
-    } else if (lowerCaseMessage.includes("budget") || lowerCaseMessage.includes("cheap")) {
-      response = {
-        ...response,
-        content: "Here are some budget-friendly options from retailers near you:",
-        storeRecommendations: storeRecommendations.budget,
-      }
-    } else if (lowerCaseMessage.includes("small business") || lowerCaseMessage.includes("local")) {
-      response = {
-        ...response,
-        content: "Supporting local businesses is great! Here are some items from small boutiques in your area:",
-        storeRecommendations: storeRecommendations.smallBusiness,
-      }
+    const body = await request.json()
+    const { message, preferences, closetItems } = body
+
+    // Create a system message that defines the AI stylist's behavior
+    const systemMessage = `You are an AI fashion stylist named Fitted. 
+    You provide personalized fashion advice, outfit recommendations, and shopping suggestions.
+    ${preferences ? `Consider these user preferences: ${JSON.stringify(preferences)}` : ""}
+    ${closetItems ? `The user has these items in their closet: ${JSON.stringify(closetItems)}` : ""}
+    Be friendly, professional, and knowledgeable about current fashion trends.
+    When recommending outfits, be specific about items, colors, and how to style them.
+    If asked about where to buy items, suggest both online and local stores when appropriate.`
+
+    // Generate a response using OpenAI
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        { role: "system", content: systemMessage },
+        { role: "user", content: message },
+      ],
+      max_tokens: 500,
+    })
+
+    const aiResponse = completion.choices[0].message.content
+
+    // Format the response
+    const response = {
+      id: Date.now().toString(),
+      role: "assistant",
+      content: aiResponse,
+      timestamp: new Date(),
     }
 
     return NextResponse.json(response)
   } catch (error) {
+    console.error("AI Stylist error:", error)
     return NextResponse.json({ error: "Failed to process message" }, { status: 500 })
   }
 }

@@ -1,13 +1,23 @@
-import Link from "next/link"
+"use client"
+
+import { useState } from "react"
 import Image from "next/image"
-import { Calendar, ArrowRight, Star, Clock } from "lucide-react"
+import { Calendar, ArrowRight, Star, Clock, Heart, ShoppingBag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { useToast } from "@/hooks/use-toast"
 
 export default function DropsPage() {
+  const [selectedDrop, setSelectedDrop] = useState<any>(null)
+  const [selectedBundle, setSelectedBundle] = useState<any>(null)
+  const [showDropDialog, setShowDropDialog] = useState(false)
+  const [showBundleDialog, setShowBundleDialog] = useState(false)
+  const { toast } = useToast()
+
   // Mock data for weekly drops
   const weeklyDrops = [
     {
@@ -18,6 +28,17 @@ export default function DropsPage() {
       itemCount: 12,
       image: "/placeholder.svg?height=300&width=600&text=Summer+Essentials",
       new: true,
+      items: [
+        { id: 1, name: "Linen Shirt", price: 49.99, image: "/placeholder.svg?height=200&width=200&text=Linen+Shirt" },
+        {
+          id: 2,
+          name: "Bermuda Shorts",
+          price: 39.99,
+          image: "/placeholder.svg?height=200&width=200&text=Bermuda+Shorts",
+        },
+        { id: 3, name: "Straw Hat", price: 29.99, image: "/placeholder.svg?height=200&width=200&text=Straw+Hat" },
+        { id: 4, name: "Sandals", price: 59.99, image: "/placeholder.svg?height=200&width=200&text=Sandals" },
+      ],
     },
     {
       id: 2,
@@ -27,6 +48,12 @@ export default function DropsPage() {
       itemCount: 8,
       image: "/placeholder.svg?height=300&width=600&text=Office+Refresh",
       new: false,
+      items: [
+        { id: 1, name: "Blazer", price: 129.99, image: "/placeholder.svg?height=200&width=200&text=Blazer" },
+        { id: 2, name: "Dress Shirt", price: 59.99, image: "/placeholder.svg?height=200&width=200&text=Dress+Shirt" },
+        { id: 3, name: "Slacks", price: 79.99, image: "/placeholder.svg?height=200&width=200&text=Slacks" },
+        { id: 4, name: "Loafers", price: 99.99, image: "/placeholder.svg?height=200&width=200&text=Loafers" },
+      ],
     },
     {
       id: 3,
@@ -36,6 +63,12 @@ export default function DropsPage() {
       itemCount: 10,
       image: "/placeholder.svg?height=300&width=600&text=Weekend+Getaway",
       new: false,
+      items: [
+        { id: 1, name: "Denim Jacket", price: 89.99, image: "/placeholder.svg?height=200&width=200&text=Denim+Jacket" },
+        { id: 2, name: "Casual Tee", price: 29.99, image: "/placeholder.svg?height=200&width=200&text=Casual+Tee" },
+        { id: 3, name: "Jeans", price: 69.99, image: "/placeholder.svg?height=200&width=200&text=Jeans" },
+        { id: 4, name: "Sneakers", price: 79.99, image: "/placeholder.svg?height=200&width=200&text=Sneakers" },
+      ],
     },
   ]
 
@@ -53,6 +86,17 @@ export default function DropsPage() {
       description: "My favorite neutral pieces for that effortless coastal look",
       itemCount: 6,
       image: "/placeholder.svg?height=300&width=600&text=Coastal+Grandma",
+      items: [
+        {
+          id: 1,
+          name: "Oversized Cardigan",
+          price: 79.99,
+          image: "/placeholder.svg?height=200&width=200&text=Cardigan",
+        },
+        { id: 2, name: "Linen Pants", price: 69.99, image: "/placeholder.svg?height=200&width=200&text=Linen+Pants" },
+        { id: 3, name: "Straw Tote", price: 49.99, image: "/placeholder.svg?height=200&width=200&text=Straw+Tote" },
+        { id: 4, name: "White Button-Up", price: 59.99, image: "/placeholder.svg?height=200&width=200&text=Button+Up" },
+      ],
     },
     {
       id: 2,
@@ -66,6 +110,27 @@ export default function DropsPage() {
       description: "Bringing back the 2000s with these nostalgic pieces",
       itemCount: 8,
       image: "/placeholder.svg?height=300&width=600&text=Y2K+Revival",
+      items: [
+        { id: 1, name: "Baby Tee", price: 29.99, image: "/placeholder.svg?height=200&width=200&text=Baby+Tee" },
+        {
+          id: 2,
+          name: "Low-Rise Jeans",
+          price: 79.99,
+          image: "/placeholder.svg?height=200&width=200&text=Low+Rise+Jeans",
+        },
+        {
+          id: 3,
+          name: "Platform Sandals",
+          price: 69.99,
+          image: "/placeholder.svg?height=200&width=200&text=Platform+Sandals",
+        },
+        {
+          id: 4,
+          name: "Butterfly Clips",
+          price: 19.99,
+          image: "/placeholder.svg?height=200&width=200&text=Butterfly+Clips",
+        },
+      ],
     },
     {
       id: 3,
@@ -79,6 +144,22 @@ export default function DropsPage() {
       description: "Build your capsule wardrobe with these timeless pieces",
       itemCount: 5,
       image: "/placeholder.svg?height=300&width=600&text=Minimalist+Essentials",
+      items: [
+        {
+          id: 1,
+          name: "Black Turtleneck",
+          price: 49.99,
+          image: "/placeholder.svg?height=200&width=200&text=Turtleneck",
+        },
+        {
+          id: 2,
+          name: "Tailored Trousers",
+          price: 89.99,
+          image: "/placeholder.svg?height=200&width=200&text=Trousers",
+        },
+        { id: 3, name: "Leather Loafers", price: 119.99, image: "/placeholder.svg?height=200&width=200&text=Loafers" },
+        { id: 4, name: "Gold Hoops", price: 39.99, image: "/placeholder.svg?height=200&width=200&text=Gold+Hoops" },
+      ],
     },
   ]
 
@@ -106,6 +187,30 @@ export default function DropsPage() {
       countdown: "22 days",
     },
   ]
+
+  const viewDrop = (drop: any) => {
+    setSelectedDrop(drop)
+    setShowDropDialog(true)
+  }
+
+  const viewBundle = (bundle: any) => {
+    setSelectedBundle(bundle)
+    setShowBundleDialog(true)
+  }
+
+  const handleSaveItem = (item: any) => {
+    toast({
+      title: "Item saved",
+      description: `${item.name} has been saved to your favorites`,
+    })
+  }
+
+  const handleBuyItem = (item: any) => {
+    toast({
+      title: "Item added to cart",
+      description: `${item.name} has been added to your cart`,
+    })
+  }
 
   return (
     <div className="space-y-8">
@@ -145,12 +250,10 @@ export default function DropsPage() {
                   </div>
                 </CardContent>
                 <CardFooter className="p-4 pt-0">
-                  <Link href={`/dashboard/drops/${drop.id}`} className="w-full">
-                    <Button className="w-full">
-                      View Collection
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
+                  <Button className="w-full" onClick={() => viewDrop(drop)}>
+                    View Collection
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
                 </CardFooter>
               </Card>
             ))}
@@ -194,12 +297,10 @@ export default function DropsPage() {
                   </div>
                 </CardContent>
                 <CardFooter className="p-4 pt-0">
-                  <Link href={`/dashboard/drops/influencer/${bundle.id}`} className="w-full">
-                    <Button className="w-full">
-                      Shop This Bundle
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
+                  <Button className="w-full" onClick={() => viewBundle(bundle)}>
+                    Shop This Bundle
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
                 </CardFooter>
               </Card>
             ))}
@@ -227,7 +328,16 @@ export default function DropsPage() {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button variant="outline" className="w-full">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => {
+                      toast({
+                        title: "Reminder set",
+                        description: `We'll notify you when the ${drop.title} collection drops`,
+                      })
+                    }}
+                  >
                     Set Reminder
                   </Button>
                 </CardFooter>
@@ -236,6 +346,113 @@ export default function DropsPage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Weekly Drop Dialog */}
+      <Dialog open={showDropDialog} onOpenChange={setShowDropDialog}>
+        <DialogContent className="sm:max-w-[800px]">
+          <DialogHeader>
+            <DialogTitle>{selectedDrop?.title}</DialogTitle>
+            <DialogDescription>{selectedDrop?.description}</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="aspect-[16/9] relative rounded-lg overflow-hidden">
+              <Image
+                src={selectedDrop?.image || "/placeholder.svg"}
+                alt={selectedDrop?.title || "Collection"}
+                fill
+                className="object-cover"
+              />
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {selectedDrop?.items.map((item: any) => (
+                <Card key={item.id} className="overflow-hidden">
+                  <CardContent className="p-0">
+                    <div className="aspect-square relative">
+                      <Image src={item.image || "/placeholder.svg"} alt={item.name} fill className="object-cover" />
+                    </div>
+                    <div className="p-2">
+                      <h3 className="font-medium text-sm">{item.name}</h3>
+                      <p className="text-sm font-bold">${item.price.toFixed(2)}</p>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="p-2 pt-0 flex justify-between">
+                    <Button variant="ghost" size="sm" onClick={() => handleSaveItem(item)}>
+                      <Heart className="h-4 w-4 mr-1" />
+                    </Button>
+                    <Button size="sm" onClick={() => handleBuyItem(item)}>
+                      <ShoppingBag className="h-4 w-4 mr-1" />
+                      Buy
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Influencer Bundle Dialog */}
+      <Dialog open={showBundleDialog} onOpenChange={setShowBundleDialog}>
+        <DialogContent className="sm:max-w-[800px]">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <Avatar>
+                <AvatarImage
+                  src={selectedBundle?.influencer?.avatar || "/placeholder.svg"}
+                  alt={selectedBundle?.influencer?.name}
+                />
+                <AvatarFallback>
+                  {selectedBundle?.influencer?.name
+                    ?.split(" ")
+                    .map((n: string) => n[0])
+                    .join("")}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <DialogTitle>{selectedBundle?.title}</DialogTitle>
+                <p className="text-sm text-muted-foreground">
+                  {selectedBundle?.influencer?.name} ({selectedBundle?.influencer?.username})
+                </p>
+              </div>
+            </div>
+            <DialogDescription className="mt-2">{selectedBundle?.description}</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="aspect-[16/9] relative rounded-lg overflow-hidden">
+              <Image
+                src={selectedBundle?.image || "/placeholder.svg"}
+                alt={selectedBundle?.title || "Bundle"}
+                fill
+                className="object-cover"
+              />
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {selectedBundle?.items.map((item: any) => (
+                <Card key={item.id} className="overflow-hidden">
+                  <CardContent className="p-0">
+                    <div className="aspect-square relative">
+                      <Image src={item.image || "/placeholder.svg"} alt={item.name} fill className="object-cover" />
+                    </div>
+                    <div className="p-2">
+                      <h3 className="font-medium text-sm">{item.name}</h3>
+                      <p className="text-sm font-bold">${item.price.toFixed(2)}</p>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="p-2 pt-0 flex justify-between">
+                    <Button variant="ghost" size="sm" onClick={() => handleSaveItem(item)}>
+                      <Heart className="h-4 w-4 mr-1" />
+                    </Button>
+                    <Button size="sm" onClick={() => handleBuyItem(item)}>
+                      <ShoppingBag className="h-4 w-4 mr-1" />
+                      Buy
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

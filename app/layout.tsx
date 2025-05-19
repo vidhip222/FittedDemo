@@ -1,27 +1,41 @@
 import type React from "react"
-import "@/app/globals.css"
-import { Montserrat, Merriweather } from "next/font/google"
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
+import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/toaster"
+import { FirebaseProvider } from "@/contexts/firebase-context"
+import { AuthProvider } from "@/contexts/auth-context"
+import { CartProvider } from "@/components/cart/cart-provider"
+import { Suspense } from "react"
 
-const montserrat = Montserrat({ subsets: ["latin"] })
-const merriweather = Merriweather({ weight: ["400", "700"], subsets: ["latin"] })
+const inter = Inter({ subsets: ["latin"] })
 
-export const metadata = {
-  title: "Fitted - AI-Powered Styling Platform",
-  description: "Your vibe. Your fit. Your world—styled in real life.",
-  generator: "v0.dev",
+export const metadata: Metadata = {
+  title: "Fitted - Your Personal Fashion Assistant",
+  description: "Discover your style, organize your closet, and shop with confidence.",
+    generator: 'v0.dev'
 }
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode
-}) {
+}>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={montserrat.className}>
+    <html lang="en">
+      <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          {children}
+          <Suspense fallback={null}>
+            <FirebaseProvider>
+              <AuthProvider>
+                <CartProvider>
+                  {children}
+                  <Toaster />
+                </CartProvider>
+              </AuthProvider>
+            </FirebaseProvider>
+          </Suspense>
         </ThemeProvider>
       </body>
     </html>

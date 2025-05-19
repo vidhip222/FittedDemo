@@ -1,90 +1,68 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, Sparkles } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { LoginForm } from "@/components/auth/login-form"
+import { useAuth } from "@/contexts/auth-context"
+import { Icons } from "@/components/icons"
+import { FirebaseInitCheck } from "@/components/firebase-init-check"
 
 export default function LoginPage() {
-  const [loading, setLoading] = useState(false)
+  const router = useRouter()
+  const { user, loading, error } = useAuth()
+  const [isRedirecting, setIsRedirecting] = useState(false)
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false)
-      window.location.href = "/dashboard"
-    }, 1500)
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (user && !loading) {
+      setIsRedirecting(true)
+      router.push("/dashboard")
+    }
+  }, [user, loading, router])
+
+  const handleSkipLogin = () => {
+    setIsRedirecting(true)
+    router.push("/dashboard")
+  }
+
+  if (loading || isRedirecting) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-pink-100 to-orange-100">
+        <div className="flex flex-col items-center justify-center space-y-4">
+          <Icons.spinner className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">
+            {isRedirecting ? "Redirecting to dashboard..." : "Loading..."}
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="container relative flex min-h-screen flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
-      <Link href="/" className="absolute left-4 top-4 md:left-8 md:top-8 flex items-center gap-2 text-lg font-medium">
-        <ArrowLeft className="h-4 w-4" />
-        Back
-      </Link>
-      <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r">
-        <div className="absolute inset-0 bg-gradient-to-br from-pink-300 to-orange-300" />
-        <div className="relative z-20 flex items-center gap-2 text-lg font-medium">
-          <Sparkles className="h-5 w-5" />
-          <span>Fitted</span>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-pink-100 to-orange-100">
+      <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+        <div className="flex flex-col space-y-2 text-center">
+          <h1 className="text-4xl font-bold tracking-tight">Welcome back</h1>
+          <p className="text-sm text-muted-foreground">Enter your credentials to sign in to your account</p>
         </div>
-        <div className="relative z-20 mt-auto">
-          <blockquote className="space-y-2">
-            <p className="text-lg">
-              "Fitted has completely transformed how I shop. The AI recommendations are spot-on, and I love discovering
-              local boutiques I never knew existed!"
+        <div className="grid gap-6">
+          {error && <div className="bg-red-50 text-red-700 p-3 rounded-md text-sm">{error}</div>}
+          <LoginForm />
+          <Button onClick={handleSkipLogin} variant="outline" className="mt-2">
+            Skip Login (Continue as Guest)
+          </Button>
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground">
+              Don't have an account?{" "}
+              <Link href="/signup" className="underline underline-offset-4 hover:text-primary">
+                Sign up
+              </Link>
             </p>
-            <footer className="text-sm">Sofia Davis</footer>
-          </blockquote>
-        </div>
-      </div>
-      <div className="lg:p-8">
-        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-          <div className="flex flex-col space-y-2 text-center">
-            <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
-            <p className="text-sm text-muted-foreground">Enter your credentials to sign in to your account</p>
           </div>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="m@example.com" required />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Link href="/forgot-password" className="text-sm text-muted-foreground hover:text-primary">
-                  Forgot password?
-                </Link>
-              </div>
-              <Input id="password" type="password" required />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing in..." : "Sign in"}
-            </Button>
-          </form>
-
-          {/* Removed the divider with line and replaced with simple text */}
-          <div className="text-center text-xs uppercase text-muted-foreground py-2">Or continue with</div>
-
-          <div className="flex flex-col space-y-2">
-            <Button variant="outline" onClick={() => handleLogin}>
-              Google
-            </Button>
-            <Button variant="outline" onClick={() => handleLogin}>
-              Apple
-            </Button>
-          </div>
-          <div className="text-center text-sm">
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" className="underline underline-offset-4 hover:text-primary">
-              Sign up
-            </Link>
+          <div className="mt-4 p-2 bg-gray-50 rounded-md">
+            <FirebaseInitCheck />
           </div>
         </div>
       </div>
