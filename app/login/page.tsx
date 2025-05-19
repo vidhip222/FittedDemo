@@ -11,11 +11,50 @@ import { Label } from "@/components/ui/label"
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    // Simulate API call
+    setError(null)
+
+    try {
+      // For demo purposes, simulate a successful login
+      setTimeout(() => {
+        setLoading(false)
+        window.location.href = "/dashboard"
+      }, 1500)
+
+
+      // In a real app, we would use Supabase auth like this:
+      /*
+      const form = e.target as HTMLFormElement
+      const emailInput = form.elements.namedItem("email") as HTMLInputElement
+      const passwordInput = form.elements.namedItem("password") as HTMLInputElement
+
+      const email = emailInput?.value.trim()
+      const password = passwordInput?.value
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) throw error
+      
+      // Redirect to dashboard
+      window.location.href = "/dashboard"
+      */
+    } catch (err: any) {
+      console.error("Login error:", err)
+      setError(err.message || "Login failed. Please check your credentials and try again.")
+      setLoading(false)
+    }
+  }
+
+  const handleSocialLogin = () => {
+    // For demo purposes, simulate a successful login
+    setLoading(true)
     setTimeout(() => {
       setLoading(false)
       window.location.href = "/dashboard"
@@ -50,10 +89,11 @@ export default function LoginPage() {
             <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
             <p className="text-sm text-muted-foreground">Enter your credentials to sign in to your account</p>
           </div>
+          {error && <div className="bg-red-50 text-red-500 p-3 rounded-md text-sm">{error}</div>}
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="m@example.com" required />
+              <Input id="email" name="email" type="email" placeholder="m@example.com" required />
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -62,24 +102,24 @@ export default function LoginPage() {
                   Forgot password?
                 </Link>
               </div>
-              <Input id="password" type="password" required />
+              <Input id="password" name="password" type="password" required />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Signing in..." : "Sign in"}
             </Button>
           </form>
 
-          {/* Removed the divider with line and replaced with simple text */}
           <div className="text-center text-xs uppercase text-muted-foreground py-2">Or continue with</div>
 
           <div className="flex flex-col space-y-2">
-            <Button variant="outline" onClick={() => handleLogin}>
+            <Button variant="outline" onClick={handleSocialLogin} disabled={loading}>
               Google
             </Button>
-            <Button variant="outline" onClick={() => handleLogin}>
+            <Button variant="outline" onClick={handleSocialLogin} disabled={loading}>
               Apple
             </Button>
           </div>
+
           <div className="text-center text-sm">
             Don&apos;t have an account?{" "}
             <Link href="/signup" className="underline underline-offset-4 hover:text-primary">

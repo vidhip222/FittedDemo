@@ -12,11 +12,52 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function SignupPage() {
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    // Simulate API call
+    setError(null)
+
+    try {
+      // For demo purposes, simulate a successful signup
+      setTimeout(() => {
+        setLoading(false)
+        window.location.href = "/dashboard"
+      }, 1500)
+
+      // In a real app, we would use Supabase auth like this:
+      /*
+      const form = e.target as HTMLFormElement
+      const nameInput = form.elements.namedItem("name") as HTMLInputElement
+      const emailInput = form.elements.namedItem("email") as HTMLInputElement
+      const passwordInput = form.elements.namedItem("password") as HTMLInputElement
+
+      const name = nameInput?.value.trim()
+      const email = emailInput?.value.trim()
+      const password = passwordInput?.value
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { name } },
+      })
+
+      if (error) throw error
+
+      // Redirect to dashboard or verification page
+      window.location.href = "/dashboard"
+      */
+    } catch (err: any) {
+      console.error("Signup error:", err)
+      setError(err.message || "Signup failed. Please try again.")
+      setLoading(false)
+    }
+  }
+
+  const handleSocialSignup = () => {
+    // For demo purposes, simulate a successful signup
+    setLoading(true)
     setTimeout(() => {
       setLoading(false)
       window.location.href = "/dashboard"
@@ -30,7 +71,7 @@ export default function SignupPage() {
         Back
       </Link>
       <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r">
-        <div className="absolute inset-0 bg-zinc-900" />
+        <div className="absolute inset-0 bg-gradient-to-br from-pink-300 to-orange-300" />
         <div className="relative z-20 flex items-center gap-2 text-lg font-medium">
           <Sparkles className="h-5 w-5" />
           <span>Fitted</span>
@@ -51,6 +92,7 @@ export default function SignupPage() {
             <h1 className="text-2xl font-semibold tracking-tight">Create an account</h1>
             <p className="text-sm text-muted-foreground">Enter your details below to create your account</p>
           </div>
+          {error && <div className="bg-red-50 text-red-500 p-3 rounded-md text-sm">{error}</div>}
           <Tabs defaultValue="email" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="email">Email</TabsTrigger>
@@ -60,15 +102,15 @@ export default function SignupPage() {
               <form onSubmit={handleSignup} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Name</Label>
-                  <Input id="name" placeholder="John Doe" required />
+                  <Input id="name" name="name" placeholder="John Doe" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="m@example.com" required />
+                  <Input id="email" name="email" type="email" placeholder="m@example.com" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
-                  <Input id="password" type="password" required />
+                  <Input id="password" name="password" type="password" required />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Creating account..." : "Create account"}
@@ -77,13 +119,13 @@ export default function SignupPage() {
             </TabsContent>
             <TabsContent value="social">
               <div className="space-y-4">
-                <Button variant="outline" className="w-full" onClick={() => handleSignup}>
+                <Button variant="outline" className="w-full" onClick={handleSocialSignup} disabled={loading}>
                   Continue with Google
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => handleSignup}>
+                <Button variant="outline" className="w-full" onClick={handleSocialSignup} disabled={loading}>
                   Continue with Apple
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => handleSignup}>
+                <Button variant="outline" className="w-full" onClick={handleSocialSignup} disabled={loading}>
                   Continue with Facebook
                 </Button>
               </div>
