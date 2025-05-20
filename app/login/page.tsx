@@ -8,6 +8,7 @@ import { ArrowLeft, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { supabase } from "@/lib/supabase"
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false)
@@ -19,15 +20,6 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      // For demo purposes, simulate a successful login
-      setTimeout(() => {
-        setLoading(false)
-        window.location.href = "/dashboard"
-      }, 1500)
-
-
-      // In a real app, we would use Supabase auth like this:
-      /*
       const form = e.target as HTMLFormElement
       const emailInput = form.elements.namedItem("email") as HTMLInputElement
       const passwordInput = form.elements.namedItem("password") as HTMLInputElement
@@ -44,7 +36,6 @@ export default function LoginPage() {
       
       // Redirect to dashboard
       window.location.href = "/dashboard"
-      */
     } catch (err: any) {
       console.error("Login error:", err)
       setError(err.message || "Login failed. Please check your credentials and try again.")
@@ -52,13 +43,24 @@ export default function LoginPage() {
     }
   }
 
-  const handleSocialLogin = () => {
-    // For demo purposes, simulate a successful login
+  const handleSocialLogin = async (provider: 'google' | 'apple') => {
     setLoading(true)
-    setTimeout(() => {
+    setError(null)
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`
+        }
+      })
+
+      if (error) throw error
+    } catch (err: any) {
+      console.error("Social login error:", err)
+      setError(err.message || "Social login failed. Please try again.")
       setLoading(false)
-      window.location.href = "/dashboard"
-    }, 1500)
+    }
   }
 
   return (
@@ -112,10 +114,10 @@ export default function LoginPage() {
           <div className="text-center text-xs uppercase text-muted-foreground py-2">Or continue with</div>
 
           <div className="flex flex-col space-y-2">
-            <Button variant="outline" onClick={handleSocialLogin} disabled={loading}>
+            <Button variant="outline" onClick={() => handleSocialLogin('google')} disabled={loading}>
               Google
             </Button>
-            <Button variant="outline" onClick={handleSocialLogin} disabled={loading}>
+            <Button variant="outline" onClick={() => handleSocialLogin('apple')} disabled={loading}>
               Apple
             </Button>
           </div>
