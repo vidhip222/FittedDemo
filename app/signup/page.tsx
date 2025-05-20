@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { supabase } from "@/lib/supabase"
 
 export default function SignupPage() {
   const [loading, setLoading] = useState(false)
@@ -20,14 +21,6 @@ export default function SignupPage() {
     setError(null)
 
     try {
-      // For demo purposes, simulate a successful signup
-      setTimeout(() => {
-        setLoading(false)
-        window.location.href = "/dashboard"
-      }, 1500)
-
-      // In a real app, we would use Supabase auth like this:
-      /*
       const form = e.target as HTMLFormElement
       const nameInput = form.elements.namedItem("name") as HTMLInputElement
       const emailInput = form.elements.namedItem("email") as HTMLInputElement
@@ -40,14 +33,16 @@ export default function SignupPage() {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { name } },
+        options: { 
+          data: { name },
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        },
       })
 
       if (error) throw error
 
-      // Redirect to dashboard or verification page
+      // Show success message or redirect
       window.location.href = "/dashboard"
-      */
     } catch (err: any) {
       console.error("Signup error:", err)
       setError(err.message || "Signup failed. Please try again.")
@@ -55,13 +50,24 @@ export default function SignupPage() {
     }
   }
 
-  const handleSocialSignup = () => {
-    // For demo purposes, simulate a successful signup
+  const handleSocialSignup = async (provider: 'google' | 'apple' | 'facebook') => {
     setLoading(true)
-    setTimeout(() => {
+    setError(null)
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      })
+
+      if (error) throw error
+    } catch (err: any) {
+      console.error("Social signup error:", err)
+      setError(err.message || "Social signup failed. Please try again.")
       setLoading(false)
-      window.location.href = "/dashboard"
-    }, 1500)
+    }
   }
 
   return (
@@ -119,13 +125,13 @@ export default function SignupPage() {
             </TabsContent>
             <TabsContent value="social">
               <div className="space-y-4">
-                <Button variant="outline" className="w-full" onClick={handleSocialSignup} disabled={loading}>
+                <Button variant="outline" className="w-full" onClick={() => handleSocialSignup('google')} disabled={loading}>
                   Continue with Google
                 </Button>
-                <Button variant="outline" className="w-full" onClick={handleSocialSignup} disabled={loading}>
+                <Button variant="outline" className="w-full" onClick={() => handleSocialSignup('apple')} disabled={loading}>
                   Continue with Apple
                 </Button>
-                <Button variant="outline" className="w-full" onClick={handleSocialSignup} disabled={loading}>
+                <Button variant="outline" className="w-full" onClick={() => handleSocialSignup('facebook')} disabled={loading}>
                   Continue with Facebook
                 </Button>
               </div>
