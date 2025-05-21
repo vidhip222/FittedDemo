@@ -255,7 +255,7 @@ export default function AIStylistPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)]">
+    <div className="flex flex-col h-[calc(100vh-8rem)] overflow-hidden">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">AI Stylist</h2>
@@ -264,7 +264,7 @@ export default function AIStylistPage() {
       </div>
 
       <Card className="flex-1 flex flex-col overflow-hidden">
-        <Tabs defaultValue="chat" className="flex-1 flex flex-col">
+        <Tabs defaultValue="chat" className="flex-1 flex flex-col h-full">
           <div className="px-4 pt-4 border-b">
             <TabsList>
               <TabsTrigger value="chat">Chat</TabsTrigger>
@@ -273,7 +273,7 @@ export default function AIStylistPage() {
             </TabsList>
           </div>
 
-          <TabsContent value="chat" className="flex-1 flex flex-col m-0 data-[state=active]:flex-1">
+          <TabsContent value="chat" className="flex-1 flex flex-col m-0 data-[state=active]:flex-1 h-full">
             <ScrollArea className="flex-1 p-4">
               <div className="space-y-4">
                 {messages.map((message) => (
@@ -429,7 +429,7 @@ export default function AIStylistPage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="closet" className="m-0 p-4 data-[state=active]:flex-1">
+          <TabsContent value="closet" className="m-0 p-4 data-[state=active]:flex-1 h-full overflow-y-auto">
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
               {closetItems.map((item) => (
                 <Card key={item.id} className="overflow-hidden">
@@ -457,7 +457,7 @@ export default function AIStylistPage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="preferences" className="m-0 p-4 data-[state=active]:flex-1">
+          <TabsContent value="preferences" className="m-0 p-4 data-[state=active]:flex-1 h-full overflow-y-auto">
             <div className="space-y-4">
               <div>
                 <h3 className="text-lg font-medium mb-2">Style Preferences</h3>

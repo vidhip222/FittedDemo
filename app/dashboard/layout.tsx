@@ -1,4 +1,7 @@
+"use client"
+
 import type { ReactNode } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import {
   Sparkles,
@@ -21,8 +24,30 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Suspense } from "react"
 import { Badge } from "@/components/ui/badge"
+import { supabase } from "@/lib/supabase"
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
+  const [userName, setUserName] = useState<string>("")
+  const [userInitials, setUserInitials] = useState<string>("")
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user?.user_metadata?.name) {
+        setUserName(user.user_metadata.name)
+        // Get initials from name
+        const initials = user.user_metadata.name
+          .split(' ')
+          .map((n: string) => n[0])
+          .join('')
+          .toUpperCase()
+        setUserInitials(initials)
+      }
+    }
+
+    fetchUser()
+  }, [])
+
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -119,8 +144,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
           <div className="flex items-center gap-4 pr-8">
             <Avatar>
-              <AvatarImage src="/placeholder-user.jpg" alt="User" />
-              <AvatarFallback>JD</AvatarFallback>
+              <AvatarImage src="/placeholder-user.jpg" alt={userName} />
+              <AvatarFallback>{userInitials}</AvatarFallback>
             </Avatar>
           </div>
         </div>
@@ -165,12 +190,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 Pop-Up Experience
                 <Badge className="ml-1 bg-yellow-500 text-white text-xs">Coming Soon</Badge>
               </Link>
-              <Link
-                href="/dashboard/stores/search"
-                className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-accent"
-              >
-                <Truck className="h-5 w-5" />
+              <Link href="/dashboard/stores/search" className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-accent">
+                <Search className="h-5 w-5" />
                 Search & Deliver
+              </Link>
+              <Link href="/dashboard/settings" className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-accent">
+                <Settings className="h-5 w-5" />
+                Settings
               </Link>
             </nav>
             <div className="mt-auto">

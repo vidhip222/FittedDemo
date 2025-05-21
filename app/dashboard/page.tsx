@@ -1,16 +1,33 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Shirt, ShoppingBag, Gift, MapPin, Plus, ArrowRight, Truck, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { supabase } from "@/lib/supabase"
 
 export default function DashboardPage() {
+  const [userName, setUserName] = useState<string>("")
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user?.user_metadata?.name) {
+        setUserName(user.user_metadata.name)
+      }
+    }
+
+    fetchUser()
+  }, [])
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Welcome back, Jessica!</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Welcome back, {userName || 'there'}!</h2>
           <p className="text-muted-foreground">Here's what's happening with your style today.</p>
         </div>
         <div className="flex items-center gap-2">
