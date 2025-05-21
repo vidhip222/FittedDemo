@@ -112,14 +112,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     <MapPin className="h-5 w-5" />
                     Nearby Stores
                   </Link>
-                  <Link
-                    href="/dashboard/stores"
-                    className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-accent"
-                  >
+                  <div className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground pointer-events-none">
                     <Store className="h-5 w-5" />
                     Pop-Up Experience
                     <Badge className="ml-1 bg-yellow-500 text-white text-xs">Coming Soon</Badge>
-                  </Link>
+                  </div>
                   <Link
                     href="/dashboard/stores/search"
                     className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-accent"
@@ -185,11 +182,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <MapPin className="h-5 w-5" />
                 Nearby Stores
               </Link>
-              <Link href="/dashboard/stores" className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-accent">
+              <div className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground pointer-events-none">
                 <Store className="h-5 w-5" />
                 Pop-Up Experience
                 <Badge className="ml-1 bg-yellow-500 text-white text-xs">Coming Soon</Badge>
-              </Link>
+              </div>
               <Link href="/dashboard/stores/search" className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-accent">
                 <Search className="h-5 w-5" />
                 Search & Deliver
