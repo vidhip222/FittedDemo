@@ -4,6 +4,9 @@ import { cn } from "@/lib/utils"
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
   ({ className, type, ...props }, ref) => {
+    // Remove fdprocessedid from props to prevent hydration mismatch
+    const { fdprocessedid, ...restProps } = props as any;
+    
     return (
       <input
         type={type}
@@ -12,7 +15,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           className
         )}
         ref={ref}
-        {...props}
+        {...restProps}
       />
     )
   }

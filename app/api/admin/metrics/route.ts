@@ -12,7 +12,7 @@ const supabase = createClient(
   },
 )
 
-const ADMIN_EMAIL = "mailtovidhipatra@email.com"
+const ADMIN_EMAIL = "mailtovidhipatra@gmail.com"
 
 export async function GET(req: Request) {
   try {

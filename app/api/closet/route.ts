@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { createClient } from "@supabase/supabase-js"
 
 // Mock data for closet items
 const closetItems = [
@@ -39,23 +40,13 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-
-    // In a real app, this would add the item to the database
-    // For now, we'll just return a success message with the item data
-
-    // Generate a new ID (would be handled by the database in a real app)
-    const newId = closetItems.length + 1
-
-    const newItem = {
-      id: newId,
-      ...body,
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: "Item added to closet",
-      item: newItem,
-    })
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    const { data, error } = await supabase.from("closet_items").insert(body).select()
+    if (error) throw error
+    return NextResponse.json({ success: true, message: "Item added to closet", item: data[0] })
   } catch (error) {
     return NextResponse.json({ error: "Failed to add item to closet" }, { status: 500 })
   }
