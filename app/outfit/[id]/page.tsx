@@ -4,7 +4,6 @@ import { useEffect, useState } from "react"
 import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 
@@ -25,7 +24,7 @@ export default function SharedOutfitPage({ params }: { params: { id: string } })
     // In a real app, this would fetch the outfit data from your backend
     // For now, we'll use mock data
     const mockOutfit = {
-      id: parseInt(params.id),
+      id: Number.parseInt(params.id),
       name: "Casual Friday",
       items: 4,
       vibe: "casual",
@@ -50,7 +49,7 @@ export default function SharedOutfitPage({ params }: { params: { id: string } })
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back to Home
       </Link>
-      
+
       <Card className="max-w-2xl mx-auto">
         <CardContent className="p-0">
           <div className="aspect-[4/3] relative">
@@ -79,4 +78,4 @@ export default function SharedOutfitPage({ params }: { params: { id: string } })
       </Card>
     </div>
   )
-} 
+}

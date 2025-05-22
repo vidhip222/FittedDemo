@@ -15,7 +15,6 @@ import {
   Menu,
   Calendar,
   Search,
-  Truck,
   MessageSquare,
   Store,
 } from "lucide-react"
@@ -32,14 +31,16 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       if (user?.user_metadata?.name) {
         setUserName(user.user_metadata.name)
         // Get initials from name
         const initials = user.user_metadata.name
-          .split(' ')
+          .split(" ")
           .map((n: string) => n[0])
-          .join('')
+          .join("")
           .toUpperCase()
         setUserInitials(initials)
       }
@@ -187,7 +188,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 Pop-Up Experience
                 <Badge className="ml-1 bg-yellow-500 text-white text-xs">Coming Soon</Badge>
               </div>
-              <Link href="/dashboard/stores/search" className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-accent">
+              <Link
+                href="/dashboard/stores/search"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-accent"
+              >
                 <Search className="h-5 w-5" />
                 Search & Deliver
               </Link>

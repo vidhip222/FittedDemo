@@ -9,23 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 
@@ -62,7 +46,7 @@ export default function OutfitsPage() {
       "Smart Casual",
       "Weekend Getaway",
     ]
-    
+
     return {
       id,
       name: names[Math.floor(Math.random() * names.length)],
@@ -74,12 +58,12 @@ export default function OutfitsPage() {
   }
 
   const ensureMinimumAISuggestions = (filteredOutfits: Outfit[]): Outfit[] => {
-    const aiOutfits = filteredOutfits.filter(outfit => outfit.source === "ai")
+    const aiOutfits = filteredOutfits.filter((outfit) => outfit.source === "ai")
     if (aiOutfits.length >= 3) return filteredOutfits
 
     const additionalOutfitsNeeded = 3 - aiOutfits.length
-    const newOutfits = Array.from({ length: additionalOutfitsNeeded }, (_, i) => 
-      generateAIOutfit(Math.max(...outfits.map(o => o.id)) + i + 1)
+    const newOutfits = Array.from({ length: additionalOutfitsNeeded }, (_, i) =>
+      generateAIOutfit(Math.max(...outfits.map((o) => o.id)) + i + 1),
     )
 
     return [...filteredOutfits, ...newOutfits]
@@ -102,10 +86,8 @@ export default function OutfitsPage() {
   const handleSave = (outfitId: number) => {
     setOutfits((prevOutfits) =>
       prevOutfits.map((outfit) =>
-        outfit.id === outfitId
-          ? { ...outfit, saved: !outfit.saved, source: !outfit.saved ? "saved" : "ai" }
-          : outfit
-      )
+        outfit.id === outfitId ? { ...outfit, saved: !outfit.saved, source: !outfit.saved ? "saved" : "ai" } : outfit,
+      ),
     )
     toast.success("Outfit saved to your collection!")
   }
@@ -143,7 +125,7 @@ export default function OutfitsPage() {
       ...prev,
       [type]: {
         ...prev[type],
-        [value]: !prev[type][value as keyof typeof prev[typeof type]],
+        [value]: !prev[type][value as keyof (typeof prev)[typeof type]],
       },
     }))
   }
@@ -163,14 +145,17 @@ export default function OutfitsPage() {
     setSearchQuery("")
   }
 
-  const filteredOutfits = ensureMinimumAISuggestions(outfits.filter((outfit) => {
-    const matchesVibe = filters.vibes[outfit.vibe as keyof typeof filters.vibes]
-    const matchesSource = filters.sources[outfit.source as keyof typeof filters.sources]
-    const matchesSearch = outfit.name.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesVibe && matchesSource && matchesSearch
-  }))
+  const filteredOutfits = ensureMinimumAISuggestions(
+    outfits.filter((outfit) => {
+      const matchesVibe = filters.vibes[outfit.vibe as keyof typeof filters.vibes]
+      const matchesSource = filters.sources[outfit.source as keyof typeof filters.sources]
+      const matchesSearch = outfit.name.toLowerCase().includes(searchQuery.toLowerCase())
+      return matchesVibe && matchesSource && matchesSearch
+    }),
+  )
 
-  const activeFiltersCount = Object.values(filters.vibes).filter(Boolean).length +
+  const activeFiltersCount =
+    Object.values(filters.vibes).filter(Boolean).length +
     Object.values(filters.sources).filter(Boolean).length +
     (searchQuery ? 1 : 0)
 
@@ -211,9 +196,7 @@ export default function OutfitsPage() {
           <SheetContent>
             <SheetHeader>
               <SheetTitle>Filter Outfits</SheetTitle>
-              <SheetDescription>
-                Filter outfits by vibe and source
-              </SheetDescription>
+              <SheetDescription>Filter outfits by vibe and source</SheetDescription>
             </SheetHeader>
             <div className="py-6 space-y-6">
               <div className="space-y-4">

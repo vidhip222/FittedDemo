@@ -33,9 +33,9 @@ export default function SignupPage() {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { 
+        options: {
           data: { name },
-          emailRedirectTo: `${window.location.origin}/auth/callback`
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       })
 
@@ -50,7 +50,7 @@ export default function SignupPage() {
     }
   }
 
-  const handleSocialSignup = async (provider: 'google' | 'apple' | 'facebook') => {
+  const handleSocialSignup = async (provider: "google" | "apple" | "facebook") => {
     setLoading(true)
     setError(null)
 
@@ -58,8 +58,8 @@ export default function SignupPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`
-        }
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
       })
 
       if (error) throw error
@@ -125,13 +125,28 @@ export default function SignupPage() {
             </TabsContent>
             <TabsContent value="social">
               <div className="space-y-4">
-                <Button variant="outline" className="w-full" onClick={() => handleSocialSignup('google')} disabled={loading}>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => handleSocialSignup("google")}
+                  disabled={loading}
+                >
                   Continue with Google
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => handleSocialSignup('apple')} disabled={loading}>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => handleSocialSignup("apple")}
+                  disabled={loading}
+                >
                   Continue with Apple
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => handleSocialSignup('facebook')} disabled={loading}>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => handleSocialSignup("facebook")}
+                  disabled={loading}
+                >
                   Continue with Facebook
                 </Button>
               </div>

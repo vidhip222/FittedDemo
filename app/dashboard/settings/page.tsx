@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { Badge } from "@/components/ui/badge"
 import { useState, useEffect } from "react"
 import { CreditCard } from "lucide-react"
@@ -55,21 +57,23 @@ interface NotificationSettings {
 export default function SettingsPage() {
   // Profile state
   const [profileData, setProfileData] = useState<ProfileData>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('profileData')
-      return saved ? JSON.parse(saved) : {
-        firstName: "Jessica",
-        lastName: "Davis",
-        email: "jessica@example.com",
-        phone: "(555) 123-4567",
-        bio: "",
-        address: {
-          street: "123 Main St, Apt 4B",
-          city: "San Francisco",
-          state: "CA",
-          zip: "94105",
-        },
-      }
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("profileData")
+      return saved
+        ? JSON.parse(saved)
+        : {
+            firstName: "Jessica",
+            lastName: "Davis",
+            email: "jessica@example.com",
+            phone: "(555) 123-4567",
+            bio: "",
+            address: {
+              street: "123 Main St, Apt 4B",
+              city: "San Francisco",
+              state: "CA",
+              zip: "94105",
+            },
+          }
     }
     return {
       firstName: "Jessica",
@@ -88,18 +92,20 @@ export default function SettingsPage() {
 
   // Style preferences state
   const [stylePreferences, setStylePreferences] = useState<StylePreferences>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('stylePreferences')
-      return saved ? JSON.parse(saved) : {
-        styleVibes: [],
-        colorPreferences: [],
-        budget: "",
-        shoppingPreferences: {
-          sustainable: false,
-          local: false,
-          thrift: false,
-        },
-      }
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("stylePreferences")
+      return saved
+        ? JSON.parse(saved)
+        : {
+            styleVibes: [],
+            colorPreferences: [],
+            budget: "",
+            shoppingPreferences: {
+              sustainable: false,
+              local: false,
+              thrift: false,
+            },
+          }
     }
     return {
       styleVibes: [],
@@ -115,20 +121,22 @@ export default function SettingsPage() {
 
   // Notification settings state
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('notificationSettings')
-      return saved ? JSON.parse(saved) : {
-        email: {
-          newRecommendations: true,
-          deliveryUpdates: true,
-          promotions: false,
-        },
-        push: {
-          newRecommendations: true,
-          deliveryUpdates: true,
-          nearbyStores: true,
-        },
-      }
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("notificationSettings")
+      return saved
+        ? JSON.parse(saved)
+        : {
+            email: {
+              newRecommendations: true,
+              deliveryUpdates: true,
+              promotions: false,
+            },
+            push: {
+              newRecommendations: true,
+              deliveryUpdates: true,
+              nearbyStores: true,
+            },
+          }
     }
     return {
       email: {
@@ -153,15 +161,15 @@ export default function SettingsPage() {
 
   // Save to localStorage whenever state changes
   useEffect(() => {
-    localStorage.setItem('profileData', JSON.stringify(profileData))
+    localStorage.setItem("profileData", JSON.stringify(profileData))
   }, [profileData])
 
   useEffect(() => {
-    localStorage.setItem('stylePreferences', JSON.stringify(stylePreferences))
+    localStorage.setItem("stylePreferences", JSON.stringify(stylePreferences))
   }, [stylePreferences])
 
   useEffect(() => {
-    localStorage.setItem('notificationSettings', JSON.stringify(notificationSettings))
+    localStorage.setItem("notificationSettings", JSON.stringify(notificationSettings))
   }, [notificationSettings])
 
   // Profile handlers
@@ -184,7 +192,7 @@ export default function SettingsPage() {
     try {
       // In a real app, this would be an API call to save the profile data
       await new Promise((resolve) => setTimeout(resolve, 1000))
-      localStorage.setItem('profileData', JSON.stringify(profileData))
+      localStorage.setItem("profileData", JSON.stringify(profileData))
       toast.success("Profile updated successfully")
     } catch (error) {
       toast.error("Failed to update profile")
@@ -228,7 +236,7 @@ export default function SettingsPage() {
     try {
       // In a real app, this would be an API call to save the style preferences
       await new Promise((resolve) => setTimeout(resolve, 1000))
-      localStorage.setItem('stylePreferences', JSON.stringify(stylePreferences))
+      localStorage.setItem("stylePreferences", JSON.stringify(stylePreferences))
       toast.success("Style preferences updated successfully")
     } catch (error) {
       toast.error("Failed to update style preferences")
@@ -238,11 +246,7 @@ export default function SettingsPage() {
   }
 
   // Notification settings handlers
-  const handleNotificationChange = (
-    type: "email" | "push",
-    setting: string,
-    value: boolean
-  ) => {
+  const handleNotificationChange = (type: "email" | "push", setting: string, value: boolean) => {
     setNotificationSettings((prev) => ({
       ...prev,
       [type]: {
@@ -258,7 +262,7 @@ export default function SettingsPage() {
     try {
       // In a real app, this would be an API call to save the notification settings
       await new Promise((resolve) => setTimeout(resolve, 1000))
-      localStorage.setItem('notificationSettings', JSON.stringify(notificationSettings))
+      localStorage.setItem("notificationSettings", JSON.stringify(notificationSettings))
       toast.success("Notification settings updated successfully")
     } catch (error) {
       toast.error("Failed to update notification settings")
@@ -311,39 +315,22 @@ export default function SettingsPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">First Name</Label>
-                    <Input
-                      id="firstName"
-                      value={profileData.firstName}
-                      onChange={handleProfileChange}
-                    />
+                    <Input id="firstName" value={profileData.firstName} onChange={handleProfileChange} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName">Last Name</Label>
-                    <Input
-                      id="lastName"
-                      value={profileData.lastName}
-                      onChange={handleProfileChange}
-                    />
+                    <Input id="lastName" value={profileData.lastName} onChange={handleProfileChange} />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={profileData.email}
-                    onChange={handleProfileChange}
-                  />
+                  <Input id="email" type="email" value={profileData.email} onChange={handleProfileChange} />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone</Label>
-                  <Input
-                    id="phone"
-                    value={profileData.phone}
-                    onChange={handleProfileChange}
-                  />
+                  <Input id="phone" value={profileData.phone} onChange={handleProfileChange} />
                 </div>
 
                 <div className="space-y-2">
@@ -374,37 +361,21 @@ export default function SettingsPage() {
               <form onSubmit={handleProfileSave} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="address-street">Street Address</Label>
-                  <Input
-                    id="address-street"
-                    value={profileData.address.street}
-                    onChange={handleProfileChange}
-                  />
+                  <Input id="address-street" value={profileData.address.street} onChange={handleProfileChange} />
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-3">
                   <div className="space-y-2">
                     <Label htmlFor="address-city">City</Label>
-                    <Input
-                      id="address-city"
-                      value={profileData.address.city}
-                      onChange={handleProfileChange}
-                    />
+                    <Input id="address-city" value={profileData.address.city} onChange={handleProfileChange} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="address-state">State</Label>
-                    <Input
-                      id="address-state"
-                      value={profileData.address.state}
-                      onChange={handleProfileChange}
-                    />
+                    <Input id="address-state" value={profileData.address.state} onChange={handleProfileChange} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="address-zip">ZIP Code</Label>
-                    <Input
-                      id="address-zip"
-                      value={profileData.address.zip}
-                      onChange={handleProfileChange}
-                    />
+                    <Input id="address-zip" value={profileData.address.zip} onChange={handleProfileChange} />
                   </div>
                 </div>
 
@@ -485,9 +456,7 @@ export default function SettingsPage() {
                   <Label htmlFor="budget">Budget Range</Label>
                   <Select
                     value={stylePreferences.budget}
-                    onValueChange={(value) =>
-                      setStylePreferences((prev) => ({ ...prev, budget: value }))
-                    }
+                    onValueChange={(value) => setStylePreferences((prev) => ({ ...prev, budget: value }))}
                   >
                     <SelectTrigger id="budget">
                       <SelectValue placeholder="Select budget range" />
@@ -676,12 +645,7 @@ export default function SettingsPage() {
                           stroke="currentColor"
                           viewBox="0 0 24 24"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M5 13l4 4L19 7"
-                          />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                         </svg>
                         Basic style recommendations
                       </li>
@@ -692,12 +656,7 @@ export default function SettingsPage() {
                           stroke="currentColor"
                           viewBox="0 0 24 24"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M5 13l4 4L19 7"
-                          />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                         </svg>
                         Limited outfit history
                       </li>
@@ -708,12 +667,7 @@ export default function SettingsPage() {
                           stroke="currentColor"
                           viewBox="0 0 24 24"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M5 13l4 4L19 7"
-                          />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                         </svg>
                         Basic AI stylist access
                       </li>
@@ -746,12 +700,7 @@ export default function SettingsPage() {
                           stroke="currentColor"
                           viewBox="0 0 24 24"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M5 13l4 4L19 7"
-                          />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                         </svg>
                         Advanced AI style recommendations
                       </li>
@@ -762,12 +711,7 @@ export default function SettingsPage() {
                           stroke="currentColor"
                           viewBox="0 0 24 24"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M5 13l4 4L19 7"
-                          />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                         </svg>
                         Unlimited outfit history
                       </li>
@@ -778,12 +722,7 @@ export default function SettingsPage() {
                           stroke="currentColor"
                           viewBox="0 0 24 24"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M5 13l4 4L19 7"
-                          />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                         </svg>
                         Priority AI stylist access
                       </li>
@@ -794,12 +733,7 @@ export default function SettingsPage() {
                           stroke="currentColor"
                           viewBox="0 0 24 24"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M5 13l4 4L19 7"
-                          />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                         </svg>
                         Exclusive style insights
                       </li>
@@ -810,12 +744,7 @@ export default function SettingsPage() {
                           stroke="currentColor"
                           viewBox="0 0 24 24"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M5 13l4 4L19 7"
-                          />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                         </svg>
                         Early access to new features
                       </li>

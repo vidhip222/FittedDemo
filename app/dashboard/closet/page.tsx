@@ -25,18 +25,13 @@ export default function ClosetPage() {
 
   const fetchClosetItems = async () => {
     try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      )
-      const { data, error } = await supabase
-        .from('closet_items')
-        .select('*')
-      
+      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+      const { data, error } = await supabase.from("closet_items").select("*")
+
       if (error) throw error
       setClosetItems(data || [])
     } catch (error) {
-      console.error('Error fetching closet items:', error)
+      console.error("Error fetching closet items:", error)
     } finally {
       setLoading(false)
     }
@@ -44,19 +39,13 @@ export default function ClosetPage() {
 
   const handleDelete = async (id: string) => {
     try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      )
-      const { error } = await supabase
-        .from('closet_items')
-        .delete()
-        .eq('id', id)
-      
+      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+      const { error } = await supabase.from("closet_items").delete().eq("id", id)
+
       if (error) throw error
-      setClosetItems(closetItems.filter(item => item.id !== id))
+      setClosetItems(closetItems.filter((item) => item.id !== id))
     } catch (error) {
-      console.error('Error deleting item:', error)
+      console.error("Error deleting item:", error)
     }
   }
 
@@ -84,10 +73,7 @@ export default function ClosetPage() {
       </div>
 
       <div className="flex items-center gap-4">
-        <Input
-          placeholder="Search your closet..."
-          className="max-w-sm"
-        />
+        <Input placeholder="Search your closet..." className="max-w-sm" />
         <Tabs defaultValue="all" className="w-full">
           <TabsList>
             <TabsTrigger value="all">All</TabsTrigger>
@@ -104,11 +90,7 @@ export default function ClosetPage() {
                 <Card key={item.id}>
                   <CardContent className="p-4">
                     <div className="relative aspect-square overflow-hidden rounded-md">
-                      <img
-                        src={item.image_url}
-                        alt={item.name}
-                        className="h-full w-full object-cover"
-                      />
+                      <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" />
                       <Button
                         variant="destructive"
                         size="icon"

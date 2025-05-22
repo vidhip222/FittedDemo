@@ -14,7 +14,9 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       if (user?.user_metadata?.name) {
         setUserName(user.user_metadata.name)
       }
@@ -27,7 +29,7 @@ export default function DashboardPage() {
     <div className="space-y-8">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Welcome back, {userName || 'there'}!</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Welcome back, {userName || "there"}!</h2>
           <p className="text-muted-foreground">Here's what's happening with your style today.</p>
         </div>
         <div className="flex items-center gap-2">

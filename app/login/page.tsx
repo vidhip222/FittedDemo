@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -14,12 +16,12 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     email: "",
-    password: ""
+    password: "",
   })
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -28,10 +30,7 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      )
+      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
       const { error } = await supabase.auth.signInWithPassword({
         email: formData.email,
@@ -40,9 +39,9 @@ export default function LoginPage() {
 
       if (error) throw error
 
-      router.push('/dashboard/closet')
+      router.push("/dashboard/closet")
     } catch (error: any) {
-      setError(error.message || 'Failed to login')
+      setError(error.message || "Failed to login")
     } finally {
       setLoading(false)
     }
@@ -79,18 +78,10 @@ export default function LoginPage() {
       <div className="lg:p-8">
         <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
           <div className="flex flex-col space-y-2 text-center">
-            <h1 className="text-2xl font-semibold tracking-tight">
-              Welcome back
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Enter your email to sign in to your account
-            </p>
+            <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
+            <p className="text-sm text-muted-foreground">Enter your email to sign in to your account</p>
           </div>
-          {error && (
-            <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md">
-              {error}
-            </div>
-          )}
+          {error && <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md">{error}</div>}
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -107,10 +98,7 @@ export default function LoginPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
-                <Link
-                  href="/forgot-password"
-                  className="text-sm text-muted-foreground hover:text-primary"
-                >
+                <Link href="/forgot-password" className="text-sm text-muted-foreground hover:text-primary">
                   Forgot password?
                 </Link>
               </div>
@@ -132,9 +120,7 @@ export default function LoginPage() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Or continue with
-              </span>
+              <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
             </div>
           </div>
           <div className="flex flex-col gap-2">
@@ -147,10 +133,7 @@ export default function LoginPage() {
           </div>
           <p className="px-8 text-center text-sm text-muted-foreground">
             Don't have an account?{" "}
-            <Link
-              href="/signup"
-              className="underline underline-offset-4 hover:text-primary"
-            >
+            <Link href="/signup" className="underline underline-offset-4 hover:text-primary">
               Sign up
             </Link>
           </p>

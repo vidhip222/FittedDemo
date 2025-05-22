@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -12,10 +14,7 @@ import { createClient } from "@supabase/supabase-js"
 import { toast } from "sonner"
 
 // Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
 export default function AddClosetItemPage() {
   const router = useRouter()
@@ -30,7 +29,7 @@ export default function AddClosetItemPage() {
     color: "",
     brand: "",
     size: "",
-    description: ""
+    description: "",
   })
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -39,7 +38,7 @@ export default function AddClosetItemPage() {
     // Cleanup function to stop camera when component unmounts
     return () => {
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop())
+        streamRef.current.getTracks().forEach((track) => track.stop())
       }
     }
   }, [])
@@ -55,28 +54,28 @@ export default function AddClosetItemPage() {
     try {
       setIsCameraInitializing(true)
       setCameraError(null)
-      console.log('Starting camera...')
-      
+      console.log("Starting camera...")
+
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: 'environment',
+          facingMode: "environment",
           width: { ideal: 1280 },
-          height: { ideal: 720 }
-        }
+          height: { ideal: 720 },
+        },
       })
-      console.log('Camera stream obtained:', stream)
+      console.log("Camera stream obtained:", stream)
 
       if (!videoRef.current) {
-        throw new Error('Video element not found')
+        throw new Error("Video element not found")
       }
 
       videoRef.current.srcObject = stream
       await videoRef.current.play()
-      console.log('Video element playing')
+      console.log("Video element playing")
       streamRef.current = stream
     } catch (error: any) {
-      console.error('Error accessing camera:', error)
-      setCameraError(error.message || 'Failed to access camera')
+      console.error("Error accessing camera:", error)
+      setCameraError(error.message || "Failed to access camera")
       setShowCamera(false)
     } finally {
       setIsCameraInitializing(false)
@@ -85,7 +84,7 @@ export default function AddClosetItemPage() {
 
   const stopCamera = () => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop())
+      streamRef.current.getTracks().forEach((track) => track.stop())
       streamRef.current = null
     }
     if (videoRef.current) {
@@ -103,27 +102,27 @@ export default function AddClosetItemPage() {
   }
 
   const capturePhoto = () => {
-    console.log('Attempting to capture photo...')
+    console.log("Attempting to capture photo...")
     if (videoRef.current && videoRef.current.srcObject) {
-      console.log('Video element and stream available')
-      const canvas = document.createElement('canvas')
+      console.log("Video element and stream available")
+      const canvas = document.createElement("canvas")
       canvas.width = videoRef.current.videoWidth
       canvas.height = videoRef.current.videoHeight
-      console.log('Canvas dimensions:', canvas.width, 'x', canvas.height)
-      const ctx = canvas.getContext('2d')
-      
+      console.log("Canvas dimensions:", canvas.width, "x", canvas.height)
+      const ctx = canvas.getContext("2d")
+
       if (ctx) {
-        console.log('Drawing image to canvas')
+        console.log("Drawing image to canvas")
         ctx.drawImage(videoRef.current, 0, 0)
-        const imageUrl = canvas.toDataURL('image/jpeg', 0.8)
-        console.log('Image captured successfully')
+        const imageUrl = canvas.toDataURL("image/jpeg", 0.8)
+        console.log("Image captured successfully")
         setPreview(imageUrl)
         stopCamera()
       } else {
-        console.error('Failed to get canvas context')
+        console.error("Failed to get canvas context")
       }
     } else {
-      console.error('Video element or stream not available')
+      console.error("Video element or stream not available")
     }
   }
 
@@ -144,56 +143,56 @@ export default function AddClosetItemPage() {
 
     try {
       if (!preview) {
-        throw new Error('Please add an image first')
+        throw new Error("Please add an image first")
       }
 
       // Convert base64 preview to File object
-      const base64Data = preview.split(',')[1]
+      const base64Data = preview.split(",")[1]
       const byteCharacters = atob(base64Data)
       const byteArrays = []
-      
+
       for (let offset = 0; offset < byteCharacters.length; offset += 512) {
         const slice = byteCharacters.slice(offset, offset + 512)
         const byteNumbers = new Array(slice.length)
-        
+
         for (let i = 0; i < slice.length; i++) {
           byteNumbers[i] = slice.charCodeAt(i)
         }
-        
+
         const byteArray = new Uint8Array(byteNumbers)
         byteArrays.push(byteArray)
       }
-      
-      const blob = new Blob(byteArrays, { type: 'image/jpeg' })
-      const imageFile = new File([blob], 'closet-item.jpg', { type: 'image/jpeg' })
-      
+
+      const blob = new Blob(byteArrays, { type: "image/jpeg" })
+      const imageFile = new File([blob], "closet-item.jpg", { type: "image/jpeg" })
+
       // Upload image to Supabase Storage
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`
       const { error: uploadError, data: uploadData } = await supabase.storage
-        .from('closet-images')
+        .from("closet-images")
         .upload(fileName, imageFile)
 
       if (uploadError) {
-        console.error('Upload error:', uploadError)
+        console.error("Upload error:", uploadError)
         throw new Error(`Failed to upload image: ${uploadError.message}`)
       }
 
       if (!uploadData) {
-        throw new Error('No upload data returned')
+        throw new Error("No upload data returned")
       }
 
       // Get the public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('closet-images')
-        .getPublicUrl(fileName)
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("closet-images").getPublicUrl(fileName)
 
       if (!publicUrl) {
-        throw new Error('Failed to get public URL for uploaded image')
+        throw new Error("Failed to get public URL for uploaded image")
       }
 
       // Save item to database
       const { error: dbError, data: dbData } = await supabase
-        .from('closet_items')
+        .from("closet_items")
         .insert([
           {
             name: formData.name,
@@ -202,26 +201,26 @@ export default function AddClosetItemPage() {
             brand: formData.brand,
             size: formData.size,
             description: formData.description,
-            image_url: publicUrl
-          }
+            image_url: publicUrl,
+          },
         ])
         .select()
 
       if (dbError) {
-        console.error('Database error details:', dbError)
-        throw new Error(`Failed to save item: ${dbError.message || 'Unknown database error'}`)
+        console.error("Database error details:", dbError)
+        throw new Error(`Failed to save item: ${dbError.message || "Unknown database error"}`)
       }
 
       if (!dbData) {
-        throw new Error('No data returned from database insert')
+        throw new Error("No data returned from database insert")
       }
 
-      toast.success('Item added to closet successfully!')
-      router.push('/dashboard/closet')
+      toast.success("Item added to closet successfully!")
+      router.push("/dashboard/closet")
     } catch (error: any) {
-      console.error('Error adding item:', error)
-      toast.error(error.message || 'Failed to add item to closet')
-      setCameraError(error.message || 'Failed to add item to closet')
+      console.error("Error adding item:", error)
+      toast.error(error.message || "Failed to add item to closet")
+      setCameraError(error.message || "Failed to add item to closet")
     } finally {
       setLoading(false)
     }
@@ -229,11 +228,11 @@ export default function AddClosetItemPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }))
+    setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
   return (
@@ -268,11 +267,7 @@ export default function AddClosetItemPage() {
         <Card>
           <CardContent className="p-6">
             <div className="flex flex-col items-center justify-center gap-4">
-              {cameraError && (
-                <div className="text-destructive text-sm mb-4">
-                  {cameraError}
-                </div>
-              )}
+              {cameraError && <div className="text-destructive text-sm mb-4">{cameraError}</div>}
               {showCamera ? (
                 <div className="relative w-full aspect-square">
                   <video
@@ -280,7 +275,7 @@ export default function AddClosetItemPage() {
                     autoPlay
                     playsInline
                     className="w-full h-full object-cover rounded-md bg-black"
-                    style={{ transform: 'scaleX(-1)' }}
+                    style={{ transform: "scaleX(-1)" }}
                   />
                   {isCameraInitializing ? (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/50">
@@ -308,8 +303,7 @@ export default function AddClosetItemPage() {
                         className="absolute -top-2 -right-2"
                         onClick={() => setPreview(null)}
                       >
-                        <span className="sr-only">Remove image</span>
-                        ×
+                        <span className="sr-only">Remove image</span>×
                       </Button>
                     </div>
                   ) : (
@@ -354,12 +348,7 @@ export default function AddClosetItemPage() {
                 <Button type="button" variant="outline" onClick={() => document.getElementById("file-upload")?.click()}>
                   Upload
                 </Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={handleCameraToggle}
-                  disabled={isCameraInitializing}
-                >
+                <Button type="button" variant="outline" onClick={handleCameraToggle} disabled={isCameraInitializing}>
                   {showCamera ? "Stop Camera" : "Take Photo"}
                 </Button>
               </div>
@@ -382,11 +371,7 @@ export default function AddClosetItemPage() {
 
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
-            <Select
-              value={formData.category}
-              onValueChange={(value) => handleSelectChange("category", value)}
-              required
-            >
+            <Select value={formData.category} onValueChange={(value) => handleSelectChange("category", value)} required>
               <SelectTrigger id="category">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
@@ -449,11 +434,7 @@ export default function AddClosetItemPage() {
           </div>
 
           <div className="flex justify-end gap-2 mt-6">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.back()}
-            >
+            <Button type="button" variant="outline" onClick={() => router.back()}>
               Cancel
             </Button>
             <Button

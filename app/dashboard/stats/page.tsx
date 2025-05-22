@@ -3,8 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
-import { BarChart, PieChart, LineChart, TrendingUp, Calendar, Clock, Tag } from "lucide-react"
+import { TrendingUp, Tag } from "lucide-react"
 
 export default function StatsPage() {
   // Mock data for demonstration
@@ -173,12 +172,12 @@ export default function StatsPage() {
                               item.color === "Black"
                                 ? "#000"
                                 : item.color === "Blue"
-                                ? "#3b82f6"
-                                : item.color === "White"
-                                ? "#fff"
-                                : item.color === "Gray"
-                                ? "#6b7280"
-                                : "#e5e7eb",
+                                  ? "#3b82f6"
+                                  : item.color === "White"
+                                    ? "#fff"
+                                    : item.color === "Gray"
+                                      ? "#6b7280"
+                                      : "#e5e7eb",
                           }}
                         />
                         <span className="text-sm font-medium">{item.color}</span>
@@ -195,4 +194,4 @@ export default function StatsPage() {
       </Tabs>
     </div>
   )
-} 
+}
