@@ -22,6 +22,8 @@ interface ClosetItem {
 export default function ClosetPage() {
   const [closetItems, setClosetItems] = useState<ClosetItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState("all")
 
   const fetchClosetItems = async () => {
     try {
@@ -53,6 +55,17 @@ export default function ClosetPage() {
     fetchClosetItems()
   }, [])
 
+  const filteredItems = closetItems.filter((item) => {
+    const matchesSearch = searchQuery === "" || 
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.color.toLowerCase().includes(searchQuery.toLowerCase())
+    
+    const matchesCategory = selectedCategory === "all" || item.category === selectedCategory
+
+    return matchesSearch && matchesCategory
+  })
+
   if (loading) {
     return <div>Loading...</div>
   }
@@ -73,8 +86,13 @@ export default function ClosetPage() {
       </div>
 
       <div className="flex items-center gap-4">
-        <Input placeholder="Search your closet..." className="max-w-sm" />
-        <Tabs defaultValue="all" className="w-full">
+        <Input 
+          placeholder="Search your closet..." 
+          className="max-w-sm"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <Tabs defaultValue="all" className="w-full" onValueChange={setSelectedCategory}>
           <TabsList>
             <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="tops">Tops</TabsTrigger>
@@ -84,9 +102,10 @@ export default function ClosetPage() {
             <TabsTrigger value="shoes">Shoes</TabsTrigger>
             <TabsTrigger value="accessories">Accessories</TabsTrigger>
           </TabsList>
-          <TabsContent value="all" className="mt-4">
+          
+          <TabsContent value={selectedCategory}>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {closetItems.map((item) => (
+              {filteredItems.map((item) => (
                 <Card key={item.id}>
                   <CardContent className="p-4">
                     <div className="relative aspect-square overflow-hidden rounded-md">
@@ -112,7 +131,6 @@ export default function ClosetPage() {
               ))}
             </div>
           </TabsContent>
-          {/* Add other TabsContent components for different categories */}
         </Tabs>
       </div>
     </div>
