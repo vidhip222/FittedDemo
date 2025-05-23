@@ -1,13 +1,29 @@
 import { useState, useEffect } from "react"
 
-export type StoreType = 
-  | "clothing_store"
-  | "thrift_store"
-  | "boutique"
-  | "department_store"
-  | "shoe_store"
-  | "jewelry_store"
-  | "accessories_store"
+export type StoreType =
+  | 'clothing_store'
+  | 'thrift_store'
+  | 'makeup_store'
+  | 'boutique'
+  | 'shoe_store'
+  | 'shopping_mall'
+  | 'department_store'
+  | 'jewelry_store'
+  | 'accessories_store'
+  | 'vintage_store';
+
+const VALID_STORE_TYPES: StoreType[] = [
+  'clothing_store',
+  'thrift_store',
+  'makeup_store',
+  'boutique',
+  'shoe_store',
+  'shopping_mall',
+  'department_store',
+  'jewelry_store',
+  'accessories_store',
+  'vintage_store'
+];
 
 interface Store {
   id: string
@@ -17,6 +33,8 @@ interface Store {
   lat: number
   lon: number
   distance: number // in kilometers
+  rating?: number
+  photos?: { url: string; width: number; height: number }[]
 }
 
 interface UseNearbyStoresProps {
@@ -28,19 +46,6 @@ export function useNearbyStores({ selectedTypes, maxDistance }: UseNearbyStoresP
   const [stores, setStores] = useState<Store[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-
-  // Calculate distance between two points using Haversine formula
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-    const R = 6371 // Earth's radius in kilometers
-    const dLat = (lat2 - lat1) * Math.PI / 180
-    const dLon = (lon2 - lon1) * Math.PI / 180
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2)
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
-    return R * c
-  }
 
   useEffect(() => {
     const fetchStores = async () => {
@@ -54,6 +59,7 @@ export function useNearbyStores({ selectedTypes, maxDistance }: UseNearbyStoresP
         })
 
         const { latitude, longitude } = position.coords
+        console.log('User location:', { latitude, longitude })
 
         // Define store types to search for
         const storeTypes = selectedTypes || [
@@ -65,55 +71,50 @@ export function useNearbyStores({ selectedTypes, maxDistance }: UseNearbyStoresP
           "jewelry_store",
           "accessories_store"
         ]
+        console.log('Searching for store types:', storeTypes)
 
-        // Fetch stores for each type
-        const allStores: Store[] = []
-        for (const type of storeTypes) {
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/search?` +
-            `q=${type}&` +
-            `format=json&` +
-            `lat=${latitude}&` +
-            `lon=${longitude}&` +
-            `radius=5000&` +
-            `limit=10`
-          )
+        // Fetch stores using our Google Places API endpoint
+        const response = await fetch(
+          `/api/stores/nearby?` +
+          `lat=${latitude}&` +
+          `lng=${longitude}&` +
+          `radius=${maxDistance ? maxDistance * 1000 : 5000}&` +
+          `type=${storeTypes.join(",")}`
+        )
 
-          if (!response.ok) {
-            throw new Error("Failed to fetch stores")
-          }
-
-          const data = await response.json()
-          
-          // Transform and add distance
-          const transformedStores = data.map((item: any) => ({
-            id: item.place_id,
-            name: item.display_name.split(",")[0],
-            address: item.display_name,
-            type: type as StoreType,
-            lat: parseFloat(item.lat),
-            lon: parseFloat(item.lon),
-            distance: calculateDistance(
-              latitude,
-              longitude,
-              parseFloat(item.lat),
-              parseFloat(item.lon)
-            )
-          }))
-
-          allStores.push(...transformedStores)
+        if (!response.ok) {
+          throw new Error("Failed to fetch stores")
         }
 
-        // Filter by distance if specified
-        const filteredStores = maxDistance
-          ? allStores.filter(store => store.distance <= maxDistance)
-          : allStores
+        const data = await response.json()
+        console.log('API response:', data)
+        
+        if (data.error) {
+          throw new Error(data.error)
+        }
 
-        // Sort by distance
-        const sortedStores = filteredStores.sort((a, b) => a.distance - b.distance)
+        // Transform the data to match our Store interface
+        const transformedStores = data.stores.map((store: any) => ({
+          id: store.id,
+          name: store.name,
+          address: store.address,
+          type: store.type as StoreType,
+          lat: store.location.lat,
+          lon: store.location.lng,
+          distance: store.distance,
+          rating: store.rating,
+          photos: store.photos
+        }))
+        console.log('Transformed stores:', transformedStores)
 
-        setStores(sortedStores)
+        const filteredStores = transformedStores.filter((store: { type: string }): store is Store => 
+          VALID_STORE_TYPES.includes(store.type as StoreType)
+        )
+        console.log('Filtered stores:', filteredStores)
+
+        setStores(filteredStores)
       } catch (err) {
+        console.error('Error fetching stores:', err)
         setError(err instanceof Error ? err.message : "Failed to fetch nearby stores")
       } finally {
         setLoading(false)

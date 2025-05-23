@@ -1,75 +1,68 @@
 import { NextResponse } from "next/server"
+import { createClient } from "@supabase/supabase-js"
 
-// Mock data for scheduled gifts
-const gifts = [
-  {
-    id: 1,
-    recipient: "Sarah",
-    item: "Boba Tea",
-    schedule: "Every Friday at 5:00 PM",
-    nextDelivery: "Friday, May 12, 2023",
-    store: "Boba Guys",
-    status: "active",
-  },
-  {
-    id: 2,
-    recipient: "Mom",
-    item: "Flowers",
-    schedule: "Monthly on the 15th",
-    nextDelivery: "Monday, May 15, 2023",
-    store: "Bloom & Wild",
-    status: "active",
-  },
-  {
-    id: 3,
-    recipient: "David",
-    item: "Coffee",
-    schedule: "Weekdays at 9:00 AM",
-    nextDelivery: "Monday, May 8, 2023",
-    store: "Blue Bottle Coffee",
-    status: "paused",
-  },
-  {
-    id: 4,
-    recipient: "Partner",
-    item: "Chocolate",
-    schedule: "Monthly on the 1st",
-    nextDelivery: "Thursday, June 1, 2023",
-    store: "Dandelion Chocolate",
-    status: "active",
-  },
-]
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
-export async function GET() {
-  return NextResponse.json(gifts)
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const userId = searchParams.get("userId")
+
+    if (!userId) {
+      return NextResponse.json({ error: "User ID is required" }, { status: 400 })
+    }
+
+    const { data, error } = await supabase
+      .from("gifts")
+      .select("*")
+      .eq("user_id", userId)
+      .order("next_delivery", { ascending: true })
+
+    if (error) throw error
+
+    return NextResponse.json(data)
+  } catch (error) {
+    console.error("Error fetching gifts:", error)
+    return NextResponse.json({ error: "Failed to fetch gifts" }, { status: 500 })
+  }
 }
 
 export async function POST(request: Request) {
   try {
-    const newGift = await request.json()
+    const gift = await request.json()
+    const { data, error } = await supabase
+      .from("gifts")
+      .insert([gift])
+      .select()
+      .single()
 
-    // In a real app, we would validate the input and save to a database
-    const gift = {
-      id: gifts.length + 1,
-      ...newGift,
-      status: "active",
-    }
+    if (error) throw error
 
-    // For mock purposes, we'll just return the new gift
-    return NextResponse.json(gift, { status: 201 })
+    return NextResponse.json(data, { status: 201 })
   } catch (error) {
+    console.error("Error creating gift:", error)
     return NextResponse.json({ error: "Failed to create gift" }, { status: 500 })
   }
 }
 
 export async function PUT(request: Request) {
   try {
-    const updatedGift = await request.json()
+    const gift = await request.json()
+    const { data, error } = await supabase
+      .from("gifts")
+      .update(gift)
+      .eq("id", gift.id)
+      .select()
+      .single()
 
-    // In a real app, we would validate the input and update in a database
-    // For mock purposes, we'll just return the updated gift
-    return NextResponse.json(updatedGift)
+    if (error) throw error
+
+    return NextResponse.json(data)
   } catch (error) {
+    console.error("Error updating gift:", error)
     return NextResponse.json({ error: "Failed to update gift" }, { status: 500 })
   }
 }
@@ -79,10 +72,20 @@ export async function DELETE(request: Request) {
     const { searchParams } = new URL(request.url)
     const id = searchParams.get("id")
 
-    // In a real app, we would delete from a database
-    // For mock purposes, we'll just return success
+    if (!id) {
+      return NextResponse.json({ error: "Gift ID is required" }, { status: 400 })
+    }
+
+    const { error } = await supabase
+      .from("gifts")
+      .delete()
+      .eq("id", id)
+
+    if (error) throw error
+
     return NextResponse.json({ success: true })
   } catch (error) {
+    console.error("Error deleting gift:", error)
     return NextResponse.json({ error: "Failed to delete gift" }, { status: 500 })
   }
 }

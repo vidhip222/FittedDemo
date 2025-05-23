@@ -14,11 +14,14 @@ import { Label } from "@/components/ui/label"
 const STORE_TYPES: { value: StoreType; label: string }[] = [
   { value: "clothing_store", label: "Clothing Stores" },
   { value: "thrift_store", label: "Thrift Stores" },
+  { value: "makeup_store", label: "Makeup Stores" },
   { value: "boutique", label: "Boutiques" },
-  { value: "department_store", label: "Department Stores" },
   { value: "shoe_store", label: "Shoe Stores" },
+  { value: "shopping_mall", label: "Malls" },
+  { value: "department_store", label: "Department Stores" },
   { value: "jewelry_store", label: "Jewelry Stores" },
-  { value: "accessories_store", label: "Accessories Stores" },
+  { value: "accessories_store", label: "Accessories" },
+  { value: "vintage_store", label: "Vintage Stores" }
 ]
 
 export default function StoresPage() {
@@ -44,6 +47,11 @@ export default function StoresPage() {
     setSelectedTypes([])
     setMaxDistance(5)
   }
+
+  const processedStores = stores?.map(store => ({
+    ...store,
+    formattedName: store?.name?.replace(/\s+/g, '-')?.toLowerCase() || ''
+  })) || [];
 
   if (loading) {
     return (
@@ -155,13 +163,15 @@ export default function StoresPage() {
 
       {view === "list" ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {stores.map((store) => (
+          {processedStores.map((store) => (
             <Card key={store.id} className="overflow-hidden">
               <CardContent className="p-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-lg">{store.name}</h3>
-                    <Badge variant="secondary">{store.type.replace("_", " ")}</Badge>
+                    <Badge variant="secondary">
+                      {store?.type?.replace(/_/g, ' ') || 'store'}
+                    </Badge>
                   </div>
                   
                   <div className="space-y-2">
@@ -170,7 +180,7 @@ export default function StoresPage() {
                       <span>{store.address}</span>
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {store.distance.toFixed(1)} km away
+                      {(store?.distance ?? 0).toFixed(1)} km away
                     </div>
                   </div>
 

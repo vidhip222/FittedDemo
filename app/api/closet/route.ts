@@ -1,50 +1,114 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 
-// Mock data for closet items
-const closetItems = [
-  { id: 1, name: "White T-Shirt", category: "tops", color: "white" },
-  { id: 2, name: "Blue Jeans", category: "bottoms", color: "blue" },
-  { id: 3, name: "Black Dress", category: "dresses", color: "black" },
-  { id: 4, name: "Leather Jacket", category: "outerwear", color: "brown" },
-  { id: 5, name: "Sneakers", category: "shoes", color: "white" },
-  { id: 6, name: "Gold Necklace", category: "accessories", color: "gold" },
-  { id: 7, name: "Striped Shirt", category: "tops", color: "multi" },
-  { id: 8, name: "Black Pants", category: "bottoms", color: "black" },
-  { id: 9, name: "Denim Jacket", category: "outerwear", color: "blue" },
-  { id: 10, name: "Ankle Boots", category: "shoes", color: "black" },
-  { id: 11, name: "Floral Dress", category: "dresses", color: "multi" },
-  { id: 12, name: "Silver Earrings", category: "accessories", color: "silver" },
-]
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 export async function GET(request: Request) {
-  // Get query parameters
-  const { searchParams } = new URL(request.url)
-  const category = searchParams.get("category")
-  const color = searchParams.get("color")
+  try {
+    // Get query parameters
+    const { searchParams } = new URL(request.url)
+    const category = searchParams.get("category")
+    const color = searchParams.get("color")
+    const userId = searchParams.get("userId")
 
-  // Filter items based on query parameters
-  let filteredItems = [...closetItems]
+    if (!userId) {
+      return NextResponse.json({ error: "User ID is required" }, { status: 400 })
+    }
 
-  if (category) {
-    filteredItems = filteredItems.filter((item) => item.category === category)
+    // Build the query
+    let query = supabase
+      .from("closet_items")
+      .select("*")
+      .eq("user_id", userId)
+
+    // Add filters if provided
+    if (category) {
+      query = query.eq("category", category)
+    }
+
+    if (color) {
+      query = query.eq("color", color)
+    }
+
+    // Execute the query
+    const { data: items, error } = await query
+
+    if (error) {
+      throw error
+    }
+
+    return NextResponse.json({ items })
+  } catch (error) {
+    console.error("Error fetching closet items:", error)
+    return NextResponse.json({ error: "Failed to fetch closet items" }, { status: 500 })
   }
-
-  if (color) {
-    filteredItems = filteredItems.filter((item) => item.color === color)
-  }
-
-  return NextResponse.json({ items: filteredItems })
 }
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-    const { data, error } = await supabase.from("closet_items").insert(body).select()
-    if (error) throw error
-    return NextResponse.json({ success: true, message: "Item added to closet", item: data[0] })
+    const item = await request.json()
+    const { data, error } = await supabase
+      .from("closet_items")
+      .insert([item])
+      .select()
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    return NextResponse.json(data, { status: 201 })
   } catch (error) {
-    return NextResponse.json({ error: "Failed to add item to closet" }, { status: 500 })
+    console.error("Error adding closet item:", error)
+    return NextResponse.json({ error: "Failed to add closet item" }, { status: 500 })
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const item = await request.json()
+    const { data, error } = await supabase
+      .from("closet_items")
+      .update(item)
+      .eq("id", item.id)
+      .select()
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    return NextResponse.json(data)
+  } catch (error) {
+    console.error("Error updating closet item:", error)
+    return NextResponse.json({ error: "Failed to update closet item" }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get("id")
+
+    if (!id) {
+      return NextResponse.json({ error: "Item ID is required" }, { status: 400 })
+    }
+
+    const { error } = await supabase
+      .from("closet_items")
+      .delete()
+      .eq("id", id)
+
+    if (error) {
+      throw error
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("Error deleting closet item:", error)
+    return NextResponse.json({ error: "Failed to delete closet item" }, { status: 500 })
   }
 }

@@ -1,41 +1,110 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Plus, Calendar, Clock, MapPin, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { toast } from "sonner"
+
+interface Gift {
+  id: string
+  user_id: string
+  recipient: string
+  recipient_phone?: string
+  item: string
+  schedule: string
+  next_delivery: string
+  store: string
+  status: "active" | "paused"
+  delivery_address: string
+  gift_type: string
+  gift_message?: string
+  created_at: string
+}
 
 export default function GiftsPage() {
-  // Mock data for scheduled gifts
-  const gifts = [
-    {
-      id: 1,
-      recipient: "Sarah",
-      item: "Boba Tea",
-      schedule: "Every Friday at 5:00 PM",
-      nextDelivery: "Friday, May 12, 2023",
-      store: "Boba Guys",
-      status: "active",
-    },
-    {
-      id: 2,
-      recipient: "Mom",
-      item: "Flowers",
-      schedule: "Monthly on the 15th",
-      nextDelivery: "Monday, May 15, 2023",
-      store: "Bloom & Wild",
-      status: "active",
-    },
-    {
-      id: 3,
-      recipient: "David",
-      item: "Coffee",
-      schedule: "Every Monday at 9:00 AM",
-      nextDelivery: "Monday, May 15, 2023",
-      store: "Blue Bottle Coffee",
-      status: "paused",
-    },
-  ]
+  const [gifts, setGifts] = useState<Gift[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState("")
+  const supabase = createClientComponentClient()
+
+  useEffect(() => {
+    fetchGifts()
+  }, [])
+
+  const fetchGifts = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error("No user found")
+
+      const { data, error } = await supabase
+        .from("gifts")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("next_delivery", { ascending: true })
+
+      if (error) throw error
+      setGifts(data || [])
+    } catch (error) {
+      console.error("Error fetching gifts:", error)
+      toast.error("Failed to load gifts")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleStatusChange = async (giftId: string, newStatus: "active" | "paused") => {
+    try {
+      const { error } = await supabase
+        .from("gifts")
+        .update({ status: newStatus })
+        .eq("id", giftId)
+
+      if (error) throw error
+
+      setGifts(gifts.map(gift => 
+        gift.id === giftId ? { ...gift, status: newStatus } : gift
+      ))
+      toast.success(`Gift ${newStatus === "active" ? "resumed" : "paused"}`)
+    } catch (error) {
+      console.error("Error updating gift status:", error)
+      toast.error("Failed to update gift status")
+    }
+  }
+
+  const handleDelete = async (giftId: string) => {
+    try {
+      const { error } = await supabase
+        .from("gifts")
+        .delete()
+        .eq("id", giftId)
+
+      if (error) throw error
+
+      setGifts(gifts.filter(gift => gift.id !== giftId))
+      toast.success("Gift deleted")
+    } catch (error) {
+      console.error("Error deleting gift:", error)
+      toast.error("Failed to delete gift")
+    }
+  }
+
+  const filteredGifts = searchQuery
+    ? gifts.filter(
+        (gift) =>
+          gift.recipient.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          gift.item.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          gift.store.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : gifts
+
+  if (loading) {
+    return <div>Loading gifts...</div>
+  }
 
   return (
     <div className="space-y-6">
@@ -58,13 +127,19 @@ export default function GiftsPage() {
         <div className="flex-1">
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input type="search" placeholder="Search gifts..." className="w-full pl-8" />
+            <Input
+              type="search"
+              placeholder="Search gifts..."
+              className="w-full pl-8"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {gifts.map((gift) => (
+      <div className="grid gap-4">
+        {filteredGifts.map((gift) => (
           <Card key={gift.id}>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
@@ -84,7 +159,7 @@ export default function GiftsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Next: {gift.nextDelivery}</span>
+                  <span className="text-sm">Next: {gift.next_delivery}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
@@ -92,20 +167,35 @@ export default function GiftsPage() {
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="pt-2 flex justify-between">
-              <Button variant="outline" size="sm">
-                Edit
+            <CardFooter className="flex justify-end gap-2">
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`/dashboard/gifts/edit/${gift.id}`}>
+                  Edit
+                </Link>
               </Button>
               {gift.status === "active" ? (
-                <Button variant="outline" size="sm">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleStatusChange(gift.id, "paused")}
+                >
                   Pause
                 </Button>
               ) : (
-                <Button variant="outline" size="sm">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleStatusChange(gift.id, "active")}
+                >
                   Resume
                 </Button>
               )}
-              <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-destructive hover:text-destructive"
+                onClick={() => handleDelete(gift.id)}
+              >
                 Cancel
               </Button>
             </CardFooter>
