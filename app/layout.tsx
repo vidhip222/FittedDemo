@@ -2,6 +2,7 @@ import type React from "react"
 import "@/app/globals.css"
 import { Montserrat, Merriweather } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "sonner"
 
 const montserrat = Montserrat({ subsets: ["latin"] })
 const merriweather = Merriweather({ weight: ["400", "700"], subsets: ["latin"] })
@@ -22,6 +23,7 @@ export default function RootLayout({
       <body className={montserrat.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           {children}
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

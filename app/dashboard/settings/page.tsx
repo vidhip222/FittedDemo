@@ -4,7 +4,7 @@ import type React from "react"
 
 import { Badge } from "@/components/ui/badge"
 import { useState, useEffect } from "react"
-import { CreditCard } from "lucide-react"
+import { CreditCard, MapPin, Save } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -15,6 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
+import { useToast } from "@/components/ui/use-toast"
 
 interface ProfileData {
   firstName: string
@@ -159,6 +160,13 @@ export default function SettingsPage() {
     notifications: false,
   })
 
+  // Location state
+  const [useCurrentLocation, setUseCurrentLocation] = useState(true)
+  const [manualLocation, setManualLocation] = useState("")
+  const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [loadingLocation, setLoadingLocation] = useState(false)
+  const { toast: useToastToast } = useToast()
+
   // Save to localStorage whenever state changes
   useEffect(() => {
     localStorage.setItem("profileData", JSON.stringify(profileData))
@@ -171,6 +179,39 @@ export default function SettingsPage() {
   useEffect(() => {
     localStorage.setItem("notificationSettings", JSON.stringify(notificationSettings))
   }, [notificationSettings])
+
+  useEffect(() => {
+    // Load saved preferences
+    const savedLocation = localStorage.getItem("userLocation")
+    const savedUseCurrent = localStorage.getItem("useCurrentLocation")
+    
+    if (savedLocation) {
+      setManualLocation(savedLocation)
+    }
+    if (savedUseCurrent !== null) {
+      setUseCurrentLocation(savedUseCurrent === "true")
+    }
+
+    // Get current location if enabled
+    if (useCurrentLocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCurrentLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          })
+        },
+        (error) => {
+          console.error("Error getting location:", error)
+          useToastToast({
+            title: "Location Error",
+            description: "Could not get your current location. Please check your location settings.",
+            variant: "destructive"
+          })
+        }
+      )
+    }
+  }, [useCurrentLocation, useToastToast])
 
   // Profile handlers
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -268,6 +309,23 @@ export default function SettingsPage() {
       toast.error("Failed to update notification settings")
     } finally {
       setLoadingStates((prev) => ({ ...prev, notifications: false }))
+    }
+  }
+
+  const handleSaveLocation = async () => {
+    setLoadingLocation(true)
+    try {
+      // Save preferences
+      localStorage.setItem("useCurrentLocation", useCurrentLocation.toString())
+      if (!useCurrentLocation) {
+        localStorage.setItem("userLocation", manualLocation)
+      }
+
+      toast.success("Location preferences updated successfully")
+    } catch (error) {
+      toast.error("Failed to save location preferences")
+    } finally {
+      setLoadingLocation(false)
     }
   }
 
@@ -773,6 +831,63 @@ export default function SettingsPage() {
                   Update Payment Method
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="location" className="mt-6 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Location Settings</CardTitle>
+              <CardDescription>
+                Configure how we find stores and items near you.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Use Current Location</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Automatically detect your location for nearby store recommendations
+                  </p>
+                </div>
+                <Switch
+                  checked={useCurrentLocation}
+                  onCheckedChange={setUseCurrentLocation}
+                />
+              </div>
+
+              {!useCurrentLocation && (
+                <div className="space-y-2">
+                  <Label htmlFor="location">Manual Location</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="location"
+                      placeholder="Enter your address or zip code"
+                      value={manualLocation}
+                      onChange={(e) => setManualLocation(e.target.value)}
+                    />
+                    <Button variant="outline" size="icon">
+                      <MapPin className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {useCurrentLocation && currentLocation && (
+                <div className="text-sm text-muted-foreground">
+                  Current location: {currentLocation.lat.toFixed(4)}, {currentLocation.lng.toFixed(4)}
+                </div>
+              )}
+
+              <Button 
+                onClick={handleSaveLocation} 
+                disabled={loadingLocation}
+                className="w-full sm:w-auto"
+              >
+                <Save className="mr-2 h-4 w-4" />
+                Save Changes
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>

@@ -1,14 +1,14 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { createClient } from "@supabase/supabase-js"
+import { supabase } from "@/lib/supabase"
+import { toast } from "sonner"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -30,8 +30,6 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-
       const { error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
@@ -39,9 +37,12 @@ export default function LoginPage() {
 
       if (error) throw error
 
+      toast.success("Successfully logged in!")
       router.push("/dashboard/closet")
     } catch (error: any) {
+      console.error("Login error:", error)
       setError(error.message || "Failed to login")
+      toast.error(error.message || "Failed to login")
     } finally {
       setLoading(false)
     }

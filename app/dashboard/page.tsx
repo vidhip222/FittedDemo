@@ -9,8 +9,21 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge"
 import { supabase } from "@/lib/supabase"
 
+interface ClosetItem {
+  id: string
+  created_at: string
+  name: string
+  category: string
+  color: string
+  brand: string
+  size: string
+  image_url: string
+}
+
 export default function DashboardPage() {
   const [userName, setUserName] = useState<string>("")
+  const [closetCount, setClosetCount] = useState<number>(0)
+  const [weeklyAdditions, setWeeklyAdditions] = useState<number>(0)
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -22,7 +35,25 @@ export default function DashboardPage() {
       }
     }
 
+    const fetchClosetStats = async () => {
+      const { data: items, error } = await supabase
+        .from("closet_items")
+        .select("*")
+        .returns<ClosetItem[]>()
+      
+      if (!error && items) {
+        setClosetCount(items.length)
+        
+        // Calculate items added this week
+        const oneWeekAgo = new Date()
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+        const recentItems = items.filter(item => new Date(item.created_at) > oneWeekAgo)
+        setWeeklyAdditions(recentItems.length)
+      }
+    }
+
     fetchUser()
+    fetchClosetStats()
   }, [])
 
   return (
@@ -55,8 +86,8 @@ export default function DashboardPage() {
             <Shirt className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">42</div>
-            <p className="text-xs text-muted-foreground">+3 added this week</p>
+            <div className="text-2xl font-bold">{closetCount}</div>
+            <p className="text-xs text-muted-foreground">+{weeklyAdditions} added this week</p>
           </CardContent>
         </Card>
         <Card>
