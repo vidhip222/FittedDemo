@@ -1,40 +1,42 @@
+// lib/hooks/useNearbyStores.ts
+
 import { useState, useEffect } from "react"
 
+// All the valid Google‐Places store types you might request
 export type StoreType =
-  | 'clothing_store'
-  | 'thrift_store'
-  | 'makeup_store'
-  | 'boutique'
-  | 'shoe_store'
-  | 'shopping_mall'
-  | 'department_store'
-  | 'jewelry_store'
-  | 'accessories_store'
-  | 'vintage_store';
+  | "clothing_store"
+  | "thrift_store"
+  | "makeup_store"
+  | "boutique"
+  | "shoe_store"
+  | "shopping_mall"
+  | "department_store"
+  | "jewelry_store"
+  | "accessories_store"
+  | "vintage_store"
 
 const VALID_STORE_TYPES: StoreType[] = [
-  'clothing_store',
-  'thrift_store',
-  'makeup_store',
-  'boutique',
-  'shoe_store',
-  'shopping_mall',
-  'department_store',
-  'jewelry_store',
-  'accessories_store',
-  'vintage_store'
-];
+  "clothing_store",
+  "thrift_store",
+  "makeup_store",
+  "boutique",
+  "shoe_store",
+  "shopping_mall",
+  "department_store",
+  "jewelry_store",
+  "accessories_store",
+  "vintage_store",
+]
 
 interface Store {
   id: string
   name: string
   address: string
-  type: StoreType
   lat: number
   lon: number
-  distance: number // in kilometers
   rating?: number
   photos?: { url: string; width: number; height: number }[]
+  details?: any        // raw Google Places “details” object
 }
 
 interface UseNearbyStoresProps {
@@ -42,87 +44,73 @@ interface UseNearbyStoresProps {
   maxDistance?: number // in kilometers
 }
 
-export function useNearbyStores({ selectedTypes, maxDistance }: UseNearbyStoresProps = {}) {
+export function useNearbyStores({
+  selectedTypes,
+  maxDistance,
+}: UseNearbyStoresProps = {}) {
   const [stores, setStores] = useState<Store[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchStores = async () => {
-      try {
-        setLoading(true)
-        setError(null)
+    const controller = new AbortController()
 
-        // Get user's location
+    async function fetchStores() {
+      setLoading(true)
+      setError(null)
+
+      try {
+        // 1) Get user’s current position
         const position = await new Promise<GeolocationPosition>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject)
         })
-
         const { latitude, longitude } = position.coords
-        console.log('User location:', { latitude, longitude })
 
-        // Define store types to search for
-        const storeTypes = selectedTypes || [
-          "clothing_store",
-          "thrift_store",
-          "boutique",
-          "department_store",
-          "shoe_store",
-          "jewelry_store",
-          "accessories_store"
-        ]
-        console.log('Searching for store types:', storeTypes)
+        // 2) Build query params
+        const typesParam = (selectedTypes ?? VALID_STORE_TYPES).join(",")
+        const radiusParam = ((maxDistance ?? 5) * 1000).toString() // default 5 km
 
-        // Fetch stores using our Google Places API endpoint
-        const response = await fetch(
-          `/api/stores/nearby?` +
-          `lat=${latitude}&` +
-          `lng=${longitude}&` +
-          `radius=${maxDistance ? maxDistance * 1000 : 5000}&` +
-          `type=${storeTypes.join(",")}`
+        // 3) Fetch from your Next.js API
+        const res = await fetch(
+          `/api/stores/nearby?lat=${latitude}&lng=${longitude}&radius=${radiusParam}&type=${typesParam}`,
+          { signal: controller.signal }
         )
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch stores")
-        }
+        // 4) **NEW**: The API now returns a raw array of store objects
+        const storesArray: any[] = await res.json()
 
-        const data = await response.json()
-        console.log('API response:', data)
-        
-        if (data.error) {
-          throw new Error(data.error)
-        }
-
-        // Transform the data to match our Store interface
-        const transformedStores = data.stores.map((store: any) => ({
-          id: store.id,
-          name: store.name,
-          address: store.address,
-          type: store.type as StoreType,
-          lat: store.location.lat,
-          lon: store.location.lng,
-          distance: store.distance,
-          rating: store.rating,
-          photos: store.photos
+        // 5) Transform into our local Store interface
+        const transformed: Store[] = storesArray.map((s) => ({
+          id: s.id,
+          name: s.name,
+          address: s.address,
+          lat: s.location.lat,
+          lon: s.location.lng,
+          rating: s.details?.rating ?? s.rating,
+          photos: s.photos ?? [],
+          details: s.details ?? {},
         }))
-        console.log('Transformed stores:', transformedStores)
 
-        const filteredStores = transformedStores.filter((store: { type: string }): store is Store => 
-          VALID_STORE_TYPES.includes(store.type as StoreType)
-        )
-        console.log('Filtered stores:', filteredStores)
-
-        setStores(filteredStores)
-      } catch (err) {
-        console.error('Error fetching stores:', err)
-        setError(err instanceof Error ? err.message : "Failed to fetch nearby stores")
+        setStores(transformed)
+      } catch (err: any) {
+        if (controller.signal.aborted) return
+        console.error("Error fetching stores:", err)
+        setError(err.message || "Failed to fetch nearby stores")
       } finally {
         setLoading(false)
       }
     }
 
     fetchStores()
-  }, [selectedTypes, maxDistance])
+    return () => {
+      controller.abort()
+    }
+  }, [
+    // re-fetch whenever the selected types or maxDistance change
+    (selectedTypes ?? []).join(","),
+    maxDistance,
+  ])
 
   return { stores, loading, error }
-} 
+}

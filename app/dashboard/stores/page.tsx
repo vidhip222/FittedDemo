@@ -27,7 +27,7 @@ const STORE_TYPES: { value: StoreType; label: string }[] = [
 export default function StoresPage() {
   const [view, setView] = useState<"list" | "map">("list")
   const [selectedTypes, setSelectedTypes] = useState<StoreType[]>([])
-  const [maxDistance, setMaxDistance] = useState(5) // in kilometers
+  const [maxDistance, setMaxDistance] = useState(10) // in kilometers
   const [showFilters, setShowFilters] = useState(false)
 
   const { stores, loading, error } = useNearbyStores({
@@ -45,7 +45,7 @@ export default function StoresPage() {
 
   const clearFilters = () => {
     setSelectedTypes([])
-    setMaxDistance(5)
+    setMaxDistance(10)
   }
 
   const processedStores = stores?.map(store => ({

@@ -1,73 +1,75 @@
-import { NextResponse } from "next/server"
+import { NextResponse } from "next/server";
 
-const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY
-const GOOGLE_PLACES_BASE_URL = "https://maps.googleapis.com/maps/api/place"
+const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY!;
+const BASE_URL = "https://maps.googleapis.com/maps/api/place";
 
 export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url)
-    const lat = searchParams.get("lat")
-    const lng = searchParams.get("lng")
-    const radius = searchParams.get("radius") || "5000" // Default 5km radius
-    const type = searchParams.get("type") || "clothing_store" // Default to clothing stores
+  const { searchParams } = new URL(request.url);
+  const lat = searchParams.get("lat");
+  const lng = searchParams.get("lng");
+  const radius = searchParams.get("radius") || "5000";
+  // allow comma-separated list of types
+  const typesParam = searchParams.get("type") || "clothing_store";
+  const types = typesParam.split(",");
 
-    if (!lat || !lng) {
-      return NextResponse.json(
-        { error: "Latitude and longitude are required" },
-        { status: 400 }
-      )
-    }
-
-    if (!GOOGLE_PLACES_API_KEY) {
-      return NextResponse.json(
-        { error: "Google Places API key is not configured" },
-        { status: 500 }
-      )
-    }
-
-    // First, search for nearby stores
-    const searchUrl = `${GOOGLE_PLACES_BASE_URL}/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=${type}&key=${GOOGLE_PLACES_API_KEY}`
-    
-    const searchResponse = await fetch(searchUrl)
-    const searchData = await searchResponse.json()
-
-    if (searchData.status !== "OK") {
-      return NextResponse.json(
-        { error: "Failed to fetch nearby stores", details: searchData.status },
-        { status: 500 }
-      )
-    }
-
-    // Get detailed information for each store
-    const stores = await Promise.all(
-      searchData.results.map(async (place: any) => {
-        // Get place details
-        const detailsUrl = `${GOOGLE_PLACES_BASE_URL}/details/json?place_id=${place.place_id}&fields=name,formatted_address,formatted_phone_number,opening_hours,rating,website,photos&key=${GOOGLE_PLACES_API_KEY}`
-        const detailsResponse = await fetch(detailsUrl)
-        const detailsData = await detailsResponse.json()
-
-        return {
-          id: place.place_id,
-          name: place.name,
-          address: place.vicinity,
-          location: place.geometry.location,
-          rating: place.rating,
-          photos: place.photos?.map((photo: any) => ({
-            url: `${GOOGLE_PLACES_BASE_URL}/photo?maxwidth=400&photoreference=${photo.photo_reference}&key=${GOOGLE_PLACES_API_KEY}`,
-            width: photo.width,
-            height: photo.height
-          })) || [],
-          details: detailsData.result || {}
-        }
-      })
-    )
-
-    return NextResponse.json({ stores })
-  } catch (error) {
-    console.error("Error fetching nearby stores:", error)
+  if (!lat || !lng) {
     return NextResponse.json(
-      { error: "Failed to fetch nearby stores" },
-      { status: 500 }
-    )
+      { error: "Latitude and longitude are required" },
+      { status: 400 }
+    );
   }
-} 
+  if (!GOOGLE_PLACES_API_KEY) {
+    return NextResponse.json(
+      { error: "Google Places API key is not configured" },
+      { status: 500 }
+    );
+  }
+
+  // fetch nearby for each type
+  const batches = await Promise.all(
+    types.map(async (type) => {
+      const url = `${BASE_URL}/nearbysearch/json?location=${lat},${lng}` +
+                  `&radius=${radius}&type=${type}&key=${GOOGLE_PLACES_API_KEY}`;
+      const res = await fetch(url);
+      const json = await res.json();
+      return json.results || [];
+    })
+  );
+
+  // flatten + dedupe by place_id
+  const merged = batches.flat();
+  const unique = Array.from(
+    new Map(merged.map((p: any) => [p.place_id, p])).values()
+  );
+
+  // fetch details for each place
+  const stores = await Promise.all(
+    unique.map(async (place: any) => {
+      const detailsUrl =
+        `${BASE_URL}/details/json?place_id=${place.place_id}` +
+        `&fields=name,formatted_address,formatted_phone_number,opening_hours,rating,website,photos` +
+        `&key=${GOOGLE_PLACES_API_KEY}`;
+      const detailsRes = await fetch(detailsUrl);
+      const detailsJson = await detailsRes.json();
+
+      return {
+        id: place.place_id,
+        name: place.name,
+        address: place.vicinity,
+        location: place.geometry.location,
+        rating: place.rating,
+        photos:
+          place.photos?.map((p: any) => ({
+            url: `${BASE_URL}/photo?maxwidth=400&photoreference=${p.photo_reference}` +
+                 `&key=${GOOGLE_PLACES_API_KEY}`,
+            width: p.width,
+            height: p.height,
+          })) || [],
+        details: detailsJson.result || {},
+      };
+    })
+  );
+
+  // ← direct array response
+  return NextResponse.json(stores);
+}

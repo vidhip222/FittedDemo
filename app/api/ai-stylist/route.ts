@@ -1,212 +1,172 @@
-import { NextResponse } from "next/server"
+// app/api/ai-stylist/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { TextServiceClient } from '@google-ai/generativelanguage'
 import { createClient } from '@supabase/supabase-js'
-import { GoogleGenerativeAI } from '@google/generative-ai'
-
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!)
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-async function searchTrendingItems(query: string) {
-  const response = await fetch(
-    `https://serpapi.com/search.json?` +
-    `engine=google_shopping&` +
-    `q=${encodeURIComponent(query)}&` +
-    `api_key=${process.env.SERPAPI_KEY}`
-  )
-  return response.json()
-}
+const ai = new TextServiceClient({
+  apiKey: process.env.GOOGLE_AI_API_KEY!,
+})
 
-async function getNearbyStores(lat: number, lng: number, radius: number) {
-  const response = await fetch(
-    `https://maps.googleapis.com/maps/api/place/nearbysearch/json?` +
-    `location=${lat},${lng}&` +
-    `radius=${radius}&` +
-    `type=clothing_store&` +
-    `key=${process.env.GOOGLE_PLACES_API_KEY}`
-  )
-  return response.json()
-}
-
-async function getPinterestStylePins(userId: string) {
+async function getPinterestStylePins(userId: string): Promise<string[]> {
   const { data, error } = await supabase
     .from('pinterest_style_pins')
-    .select('*')
+    .select('description')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
-    .limit(5);
-  
-  if (error) {
-    console.error('Error fetching Pinterest pins:', error);
-    return [];
-  }
-  return data;
+    .limit(5)
+  return error || !data ? [] : data.map((r: any) => r.description)
 }
 
 async function getUserCloset(userId: string) {
   const { data, error } = await supabase
     .from('closet_items')
-    .select('*')
-    .eq('user_id', userId);
-  
-  if (error) {
-    console.error('Error fetching closet items:', error);
-    return [];
-  }
-  return data;
+    .select('name,category,color,style')
+    .eq('user_id', userId)
+  return error || !data ? [] : data
 }
 
 async function getChatHistory(userId: string) {
   const { data, error } = await supabase
     .from('chat_history')
-    .select('*')
+    .select('message')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
-    .limit(10);
-  
-  if (error) {
-    console.error('Error fetching chat history:', error);
-    return [];
-  }
-  return data;
+    .limit(10)
+  return error || !data ? [] : data.map((r: any) => r.message)
 }
 
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
   try {
-    console.log('Starting outfit generation');
-    
-    // Validate environment variables
-    if (!process.env.GOOGLE_AI_API_KEY) {
-      throw new Error('Google AI API key is missing');
-    }
+    const { message, userId, occasion, style, budget, location } = await req.json()
 
-    const requestData = await request.json();
-    console.log('Received request data:', requestData);
-
-    // Validate required fields
-    if (!requestData.message) {
+    // 1) Ask for vibe/mood if missing
+    if (!message?.trim()) {
       return NextResponse.json(
-        { error: 'Vibe/mood description is required' },
-        { status: 400 }
-      );
+        { followUp: 'What vibe or mood are you looking for today? (e.g., casual weekend, business meeting)' },
+        { status: 200 }
+      )
     }
 
-    // Get all contextual data
-    const [pinterestPins, closetItems, chatHistory, userPreferences] = await Promise.all([
-      requestData.userId ? getPinterestStylePins(requestData.userId) : Promise.resolve([]),
-      requestData.userId ? getUserCloset(requestData.userId) : Promise.resolve([]),
-      requestData.userId ? getChatHistory(requestData.userId) : Promise.resolve([]),
-      requestData.userId ? supabase
-        .from('user_preferences')
-        .select('*')
-        .eq('user_id', requestData.userId)
-        .single()
-        .then(({ data }) => data || {}) : Promise.resolve({})
-    ]);
+    // 2) Ask for occasion if missing
+    if (!occasion) {
+      return NextResponse.json(
+        { followUp: 'Great—what’s the occasion or setting for your date night?' },
+        { status: 200 }
+      )
+    }
 
-    // Enhanced outfit generation prompt
-    const prompt = `As a professional fashion stylist, create 3 complete outfits based on:
-    
-    User Vibe: "${requestData.message}"
-    ${requestData.occasion ? `Occasion: ${requestData.occasion}` : ''}
-    
-    Style Inspiration:
-    ${pinterestPins.length > 0 ? 
-      `Pinterest Pins: ${JSON.stringify(pinterestPins.map(pin => pin.description))}` : 
-      'No Pinterest inspiration available'}
-    
-    Existing Wardrobe:
-    ${closetItems.length > 0 ? 
-      `Closet Items: ${JSON.stringify(closetItems.map(item => item.name))}` : 
-      'No closet items analyzed'}
-    
-    Past Recommendations:
-    ${chatHistory.length > 0 ? 
-      `Previous Interactions: ${JSON.stringify(chatHistory.map(chat => chat.message))}` : 
-      'No chat history available'}
-    
-    User Preferences:
-    ${JSON.stringify({
-      style: requestData.style || 'casual',
-      budget: requestData.budget || 100,
-      ...userPreferences
-    })}
+    // 3) Gather context in parallel
+    const [pins, closet, history, prefRow] = await Promise.all([
+      userId ? getPinterestStylePins(userId) : Promise.resolve([]),
+      userId ? getUserCloset(userId) : Promise.resolve([]),
+      userId ? getChatHistory(userId) : Promise.resolve([]),
+      userId
+        ? supabase
+            .from('user_preferences')
+            .select('style, colorPreferences, budget, shoppingPreferences')
+            .eq('user_id', userId)
+            .single()
+            .then(({ data }) => data || {})
+        : Promise.resolve({}),
+    ])
 
-    For each outfit, provide:
-    1. Complete head-to-toe look description
-    2. Color palette
-    3. Key pieces with price ranges
-    4. Where to buy (prioritize user's favorite stores)
-    5. How it matches the requested vibe
-    6. How it incorporates their existing items
-    7. Occasion suitability
-    8. Confidence score (1-10)
+    // 4) Build the prompt
+    const prompt = `
+You are a professional fashion stylist.
+User Vibe: "${message}"
+Occasion: ${occasion}
 
-    Format as JSON with this structure:
+Style Inspiration:
+${pins.length ? pins.map(p => `- ${p}`).join('\n') : '- none'}
+
+Existing Wardrobe:
+${closet.length ? closet.map(i => `- ${i.name}`).join('\n') : '- none'}
+
+Past Recommendations:
+${history.length ? history.map(m => `- ${m}`).join('\n') : '- none'}
+
+User Preferences:
+${JSON.stringify({ style, budget, ...prefRow }, null, 2)}
+
+Generate 3 distinct outfits. For each include:
+1. Full description
+2. Color palette
+3. Key pieces with price range & store/link
+4. Why it matches the vibe
+5. Which existing items are used
+6. Occasion suitability
+7. Confidence score (1–10)
+
+Return valid JSON: 
+{
+  "outfits": [
     {
-      "outfits": [{
-        "description": "string",
-        "color_palette": ["string"],
-        "pieces": [{
-          "name": "string",
-          "type": "string",
-          "price_range": "string",
-          "store": "string"
-        }],
-        "vibe_match": "string",
-        "existing_items_used": ["string"],
-        "occasion": "string",
-        "confidence": number
-      }]
-    }`;
+      "description": "...",
+      "color_palette": ["...", "..."],
+      "pieces": [
+        { "name":"...", "type":"...", "price_range":"...", "store":"...", "url":"..." }
+      ],
+      "vibe_match":"...",
+      "existing_items_used":["..."],
+      "occasion":"...",
+      "confidence":0
+    },
+    … 
+  ]
+}`
 
-    console.log('Generated prompt:', prompt);
+    // 5) Call the AI
+    const [aiResponse] = await ai.generateText({
+      model: 'models/text-bison-001',
+      prompt: { text: prompt },
+      temperature: 0.7,
+      maxOutputTokens: 1024,
+    })
 
-    // Get AI response
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-    
-    console.log('Raw AI response:', text);
+    const raw = aiResponse.candidates?.[0]?.output ?? ''
 
-    // Parse and validate response
-    let outfits;
+    // 6) JSON parsing logic (currently commented out)
+/*
+    let json: any
     try {
-      outfits = JSON.parse(text).outfits;
-      if (!Array.isArray(outfits) || outfits.length === 0) {
-        throw new Error('No valid outfits generated');
-      }
-    } catch (e) {
-      console.error('Failed to parse AI response:', e);
-      throw new Error('Invalid outfit response format');
+      json = JSON.parse(raw)
+    } catch {
+      return NextResponse.json(
+        { followUp: 'I’m having trouble parsing the outfit suggestions—could you rephrase your request or add more details?' },
+        { status: 200 }
+      )
     }
+    if (!Array.isArray(json.outfits) || json.outfits.length === 0) {
+      return NextResponse.json(
+        { followUp: 'I couldn’t come up with any outfits—could you share more specifics? (e.g., weather, preferred colors, or must-have pieces)' },
+        { status: 200 }
+      )
+    }
+    return NextResponse.json(json)
+*/
 
-    return NextResponse.json({ outfits });
-
-  } catch (error) {
-    console.error('Outfit generation error:', error);
+    // 7) For now, return the raw AI text
+    return new NextResponse(raw, {
+      status: 200,
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    })
+  } catch (err: any) {
+    console.error('Outfit generation error:', err)
+    const msg = err.message || ''
+    if (msg.includes('NOT_FOUND')) {
+      return NextResponse.json(
+        { followUp: 'I’m having trouble finding styles—could you add any more details?' },
+        { status: 200 }
+      )
+    }
     return NextResponse.json(
-      { 
-        error: 'Failed to generate outfits',
-        details: error instanceof Error ? error.message : String(error)
-      },
+      { error: 'Failed to generate outfits', details: msg },
       { status: 500 }
-    );
+    )
   }
-}
-
-// Helper function to calculate distance between two points
-function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const R = 6371 // Earth's radius in kilometers
-  const dLat = (lat2 - lat1) * Math.PI / 180
-  const dLon = (lon2 - lon1) * Math.PI / 180
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2)
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
-  return (R * c).toFixed(1) + " km"
 }
